@@ -1,6 +1,6 @@
 # Agent Conventions
 
-How agents are built, structured, and operated in this workspace.
+How agents are built, structured, and operated in this workspace. See `PHILOSOPHY.md` for the principles behind these conventions.
 
 ## Naming
 
@@ -37,6 +37,7 @@ Agents/<name>/
 ├── soul.md              # Voice, temperament, behavioral traits
 ├── name.md              # Historical/mythological figure behind the name
 ├── autonomy.md          # Authority ladder — what the agent owns vs. flags
+├── tools.md             # Available tools and their configuration
 ├── actions.md           # Standing action tracker (always current)
 ├── context.md           # Startup context paths and project file references
 ├── MEMORY.md            # Memory index — standing and session sections
@@ -95,12 +96,27 @@ Defines the agent's operating authority — what it can do independently and wha
 
 See **Autonomy Model** below for the full framework. This file is the agent's primary reference for how to behave during a session — it governs whether the agent acts, announces intent, or asks.
 
+### tools.md
+
+Defines what external tools the agent has access to and how to use them. Contains:
+- Account configuration (credentials, config paths)
+- Agent identity (email alias, display name, if applicable)
+- Command reference for each tool
+- Scope constraints (e.g., internal-only communications)
+
+Autonomy levels for tooling actions are defined in `autonomy.md`, not here. `tools.md` says *how* to use the tools; `autonomy.md` says *when* the agent needs approval.
+
 ### actions.md
 
 Single standing file — the agent's running to-do list. Always current, updated every session close. Structure:
 - "Last reviewed" date at the top
-- Open table: #, Action, Owner, Priority, Due/Target, Status, Since
-- Completed table: #, Action, Owner, Completed date
+- Open table: #, Action, Ticket, Owner, Priority, Due/Target, Status, Since
+- Completed table: #, Action, Ticket, Owner, Completed date
+
+The `Ticket` column is optional — contains the issue tracker ID when the action has a corresponding ticket. When present:
+- At session close, sync status both ways (update tracker state to match action status, and vice versa)
+- During session priority declaration, check linked tickets for state changes since last session
+- Not all actions need a ticket — agent operational items (memory hygiene, follow-ups, session carryover) stay in actions.md only
 
 Priority uses P1/P2/P3:
 - **P1** — Must progress this week. Session focus candidates.
@@ -165,6 +181,16 @@ When operating at L3, the agent:
 
 This keeps {{PRINCIPAL}} in the loop without making them the bottleneck. The agent drives; {{PRINCIPAL}} steers.
 
+### Senior vs. Junior Agents
+
+The autonomy model applies differently depending on how the agent is designed.
+
+**Senior agents** start with more actions at L3 (Intend) and move to L4-L5 faster. They're expected to exercise judgment, push back on direction they disagree with, and drive session agendas. Less documentation in `tools.md` and `role.md` — more latitude in `autonomy.md`. A senior agent that always agrees with you is a broken agent.
+
+**Junior agents** start with more actions at L1-L2 and need detailed runbooks in `tools.md` and explicit scope boundaries in `role.md`. They're reliable executors with well-defined playbooks. Promotion is slower and more granular.
+
+Both are valid design choices. Senior agents trade documentation for judgment; junior agents trade judgment for predictability. The framework defaults to senior — if you want a junior agent, be deliberate about it in Phase 2 (Role) and Phase 3 (Autonomy) of `/create-agent`.
+
 ### Promotion & Demotion
 
 Authority levels change through explicit signals:
@@ -226,8 +252,9 @@ Agents have a natural tendency toward recency bias — prioritising whatever was
 
 At the start of every session (after loading context), the agent:
 1. Reviews `actions.md` and identifies the top priorities (P1 items first, then P2)
-2. Declares a **session focus** — up to 3 items that this session should progress, in priority order
-3. Gets {{PRINCIPAL}}'s agreement before proceeding
+2. Checks for inbound communications (see `tools.md` for triage commands, if configured). If messages exist, factor them into the priority assessment — a message from a stakeholder may elevate or introduce a priority. If no inbound channel is configured or the inbox is empty, move on silently.
+3. Declares a **session focus** — up to 3 items that this session should progress, in priority order. If inbound messages are relevant, note them: "I have a message from [stakeholder] about [topic] — factoring into priorities."
+4. Gets {{PRINCIPAL}}'s agreement before proceeding
 
 This declaration becomes the session's compass. Everything that follows is measured against it.
 
@@ -270,26 +297,28 @@ Individual per-agent skill files are not needed. Agent-specific startup context 
 
 ### Startup Sequence (standard order)
 
-1. Soul (`soul.md`)
-2. Name (`name.md`)
-3. Role (`role.md`)
-4. Autonomy (`autonomy.md`)
-5. Actions (`actions.md`)
-6. Memory index (`MEMORY.md`)
-7. All standing memories
-8. Most recent 2 session memories
-9. Paths listed in `context.md` under `## Startup Context`
+1. Run `date` to establish current date, time, and day of week
+2. Soul (`soul.md`)
+3. Name (`name.md`)
+4. Role (`role.md`)
+5. Autonomy (`autonomy.md`)
+6. Tools (`tools.md`)
+7. Actions (`actions.md`)
+8. Memory index (`MEMORY.md`)
+9. All standing memories
+10. Most recent 2 session memories
+11. Paths listed in `context.md` under `## Startup Context`
 
 ### Session End Protocol (standard steps)
 
-1. Review the session — scan conversation for topics, decisions, action items, documents
+1. Review the session — scan conversation for topics, decisions, action items, communications, documents
 2. Update action tracker — add new, complete done, flag at-risk
-3. Review autonomy — note any promotions, demotions, or uncertain moments; update `autonomy.md`
+3. Review autonomy — note any promotions, demotions, or uncertain moments; update `autonomy.md` if {{PRINCIPAL}} gave explicit signals
 4. Create session memory — in `memory/sessions/`, reference actions.md instead of duplicating
 5. Update memory index — add one-line summary
 6. Update project files — log and status if changed
 7. Commit and push — stage all session changes, commit with a descriptive message, push to origin
-8. Confirm — show summary (include any autonomy changes)
+8. Confirm — show summary to {{PRINCIPAL}} (include any autonomy changes)
 
 ## Baseline Consolidation
 
@@ -299,3 +328,66 @@ When the agent has accumulated more than 5 standing entries or more than 10 sess
 - Update MEMORY.md index
 
 This prevents context bloat while preserving institutional knowledge.
+
+## Tooling
+
+Agents may have access to external tools — email, calendars, issue trackers, version control, databases, browser automation, etc. This section defines the framework for adding and managing tools. Specific tool configurations live in each agent's `tools.md`.
+
+### Scope Constraints
+
+Define boundaries for tooling actions in your workspace's copy of this file. Common constraints:
+- **Internal-only communications.** Agents may only contact internal addresses. External communication requires explicit promotion in `autonomy.md`.
+- **Shared inboxes.** All agents read from the same communication channel. No message is private to a single agent.
+- **Read-only data access.** Database access is read-only for debugging and verification. Write access requires explicit promotion.
+
+### Autonomy Integration
+
+Tooling actions follow the agent's autonomy model (`autonomy.md`). Suggested defaults for new agents:
+
+| Action | Default Level |
+|--------|--------------|
+| Read communications / calendar / shared files | L5 — Own |
+| Read issues / projects | L5 — Own |
+| Update issue status | L4 — Act & Inform |
+| Send internal communication (routine) | L3 — Intend |
+| Send internal communication (sensitive) | L2 — Recommend |
+| Create issues, add comments | L3 — Intend |
+| Create / modify calendar events | L3 — Intend |
+| Read PRs, checks, CI status | L5 — Own |
+| Create branches, push code | L4 — Act & Inform |
+| Create PRs | L4 — Act & Inform |
+| Review PRs (comment) | L3 — Intend |
+| Merge own PRs after approval | L3 — Intend |
+| Review PRs (approve/request changes) | L2 — Recommend |
+| Browse public websites (research, documentation) | L3 — Intend |
+| Browse authenticated internal tools | L2 — Recommend |
+| Read-only data queries (non-production) | L3 — Intend |
+| Read-only data queries (production) | L2 — Recommend |
+| Write data queries | Blocked — requires explicit promotion |
+| Send external communication | Blocked — requires explicit promotion |
+
+"Sensitive" is left to agent judgment — examples include escalations, legal matters, anything involving external stakeholders, or communications that could set expectations on behalf of the organisation.
+
+Agents override these defaults in their own `autonomy.md` as trust develops through the standard promotion/demotion process.
+
+### Post-Creation Admin Checklist
+
+After `/create-agent` completes the code side, external tool setup may be required. Examples:
+
+1. **Communication aliases** — set up the agent's email alias or messaging identity
+2. **Send-as configuration** — configure the agent to send from its own identity
+3. **Issue tracker labels** — add agent-specific labels for ownership tracking
+4. **Version control access** — if the agent needs its own account or permissions
+
+Customise this checklist in your workspace's `CONVENTIONS.md` to match your tool stack.
+
+### Adding a New Tool
+
+When introducing a new tool to the agent framework:
+
+1. **Convention** — add a section under `## Tooling` in this file with account setup, key commands, and scope constraints
+2. **Autonomy defaults** — add default levels to the Autonomy Integration table above
+3. **Agent tools.md** — add the tool section to each agent that needs access
+4. **Agent autonomy.md** — add the tooling actions at the appropriate levels, with a changelog entry
+5. **Create-agent skill** — if the tool applies to all agents, update the `tools.md` template in the skill
+6. **This checklist** — if the tool requires manual admin setup, add a step to the Post-Creation Admin Checklist above

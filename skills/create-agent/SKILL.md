@@ -1,8 +1,8 @@
 ---
-description: Create a new agent following workspace conventions. Interactive process that defines role, soul, and structure. Use when setting up a new AI execution partner for a project or initiative.
+description: Create a new agent following workspace conventions. Interactive process that defines role, soul, and structure. Use when setting up a new AI collaboration partner for a project or initiative.
 scope: workspace
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash(mkdir), Bash(ls), Bash(date), AskUserQuestion
-argument-hint: [scope — e.g., GoAspire] (optional in single-domain workspaces)
+argument-hint: [scope — e.g., Acme] (optional in single-domain workspaces)
 ---
 
 # /create-agent — Agent Builder
@@ -27,7 +27,7 @@ Work through these phases interactively. Each phase ends with confirmation befor
 ### Phase 1: Scope & Project
 
 **Multi-domain workspaces only:** If scope wasn't provided in arguments:
-- Ask: "Which scope does this agent belong to?" (e.g., GoAspire, IbanAsia)
+- Ask: "Which scope does this agent belong to?" (e.g., Acme, Personal)
 
 **Single-domain workspaces:** Read the workspace root `CLAUDE.md` to infer the scope from the workspace context. No need to ask.
 
@@ -38,6 +38,10 @@ Then:
 ### Phase 2: Role Definition
 
 This is the foundation. Get it right before moving on.
+
+**Design choice — senior or junior:** Before gathering inputs, establish whether this is a **senior agent** (sparring partner — exercises judgment, challenges direction, drives agendas) or a **junior agent** (execution partner — follows playbooks, needs detailed documentation, operates within tight guardrails). This choice affects how much latitude to build into role.md and how detailed the working mode section needs to be.
+
+Most agents should default to senior. If the principal describes something that sounds like a runbook or checklist ("check X, then do Y, then report Z"), that's a junior agent — flag it and confirm the intent.
 
 Ask the principal to describe:
 - **What does this agent do?** What's its primary job?
@@ -71,6 +75,10 @@ Based on the approved role, draft an `autonomy.md` with initial authority levels
 - **L2 (Recommend):** Decisions that affect direction — priorities, scope changes, new initiatives
 - **L1 (Flag):** Strategic decisions, stakeholder relationships, anything out of scope or requiring the principal's authority
 
+**Senior agents:** Seed more actions at L3-L4. The agent should feel empowered to drive from the first session.
+
+**Junior agents:** Seed more actions at L1-L2. The agent earns autonomy through demonstrated reliability, one action type at a time.
+
 Be specific — list concrete action types, not vague categories. The agent will reference this file every session to decide how to behave.
 
 Present the draft. Iterate until approved.
@@ -82,6 +90,8 @@ Based on the approved role, draft a `soul.md`. Consider:
 - What temperament serves the outcomes? An action tracker should be impatient with ambiguity. A research synthesizer should be patient and thorough.
 - What should the agent value? Precision? Speed? Thoroughness? Brevity?
 - What should it NOT do? Pad output? Speculate? People-please?
+
+For senior agents, the soul should encode intellectual honesty — the agent pushes back, challenges assumptions, and says "I disagree" when it has reason to. An always-agreeable senior agent is a design failure.
 
 Write in third person. Keep it under 15 lines. No overlap with working rules in role.md — soul is how the agent *feels* to interact with, not what it does.
 
@@ -120,6 +130,7 @@ Once name, role, soul, and autonomy are confirmed, create the full agent structu
    ├── soul.md
    ├── name.md
    ├── autonomy.md
+   ├── tools.md
    ├── actions.md
    ├── context.md
    ├── MEMORY.md
@@ -155,13 +166,13 @@ Once name, role, soul, and autonomy are confirmed, create the full agent structu
 
    ## Open
 
-   | # | Action | Owner | Priority | Due/Target | Status | Since |
-   |---|--------|-------|----------|------------|--------|-------|
+   | # | Action | Ticket | Owner | Priority | Due/Target | Status | Since |
+   |---|--------|--------|-------|----------|------------|--------|-------|
 
    ## Completed
 
-   | # | Action | Owner | Completed |
-   |---|--------|-------|-----------|
+   | # | Action | Ticket | Owner | Completed |
+   |---|--------|--------|-------|-----------|
    ```
 
 4. **MEMORY.md** — empty template:
@@ -201,13 +212,25 @@ Once name, role, soul, and autonomy are confirmed, create the full agent structu
    - <project-specific paths>
    ```
 
-   In single-domain workspaces, startup paths reference project files directly (e.g., `projects/foo/CLAUDE.md`). In multi-domain workspaces, paths include the area prefix (e.g., `GoAspire/projects/foo/CLAUDE.md`).
+   In single-domain workspaces, startup paths reference project files directly (e.g., `projects/foo/CLAUDE.md`). In multi-domain workspaces, paths include the area prefix (e.g., `Acme/projects/foo/CLAUDE.md`).
 
-6. **Update the workspace root `CLAUDE.md`** (single-domain) or **`<scope>/CLAUDE.md`** (multi-domain) — add the agent to the Agents table (name, role title)
+6. **tools.md** — agent tooling configuration:
+   - If external tools are configured in `Agents/CONVENTIONS.md` § Tooling, read the tool framework.
+   - Glob for an existing agent's `tools.md` to use as a template (e.g., `Agents/*/tools.md` or `Agents/*/*/tools.md`). If one exists, read it and adapt for the new agent's name and identity.
+   - If no existing `tools.md` exists, create a minimal placeholder:
+     ```markdown
+     # <Name> — Tools
 
-7. **Update `Agents/CONVENTIONS.md`** — add the name to the Reserved list
+     No external tools configured yet. Add tool sections here as needed.
+     See `Agents/CONVENTIONS.md` § Tooling for the framework.
+     ```
+   - If the workspace has a Post-Creation Admin Checklist in CONVENTIONS.md, remind the principal to complete it after agent creation.
 
-8. **Create initial baseline** at `<agent-dir>/memory/standing/<date>-baseline.md`:
+7. **Update the workspace root `CLAUDE.md`** (single-domain) or **`<scope>/CLAUDE.md`** (multi-domain) — add the agent to the Agents table (name, role title)
+
+8. **Update `Agents/CONVENTIONS.md`** — add the name to the Reserved list
+
+9. **Create initial baseline** at `<agent-dir>/memory/standing/<date>-baseline.md`:
    - Capture the current state of the project this agent is scoped to
    - Note what exists, what's in progress, what's pending
 

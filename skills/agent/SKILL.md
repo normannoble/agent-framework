@@ -1,7 +1,7 @@
 ---
 description: Agent router — invoke, list, and manage workspace agents. Use /agent <name> to activate an agent, /agent list to see all agents, or /agent list <scope> for scope-filtered listing.
 disable-model-invocation: true
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash(gws), Bash(date), Bash(ls), AskUserQuestion
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash(date), Bash(ls), AskUserQuestion
 argument-hint: <name> [topic] | list [scope]
 ---
 
@@ -33,7 +33,7 @@ Parse `$ARGUMENTS` and route:
 | Sigrid | — | Senior Product Manager |
 ```
 
-If a scope filter was given (e.g., `/agent list GoAspire`), only show agents in that scope.
+If a scope filter was given (e.g., `/agent list Acme`), only show agents in that scope.
 
 ### `/agent <name>` or `/agent <name> <topic>`
 1. Find the agent directory: Glob for both `Agents/<name>/context.md` and `Agents/*/<name>/context.md` (case-insensitive match on directory name)
@@ -41,7 +41,7 @@ If a scope filter was given (e.g., `/agent list GoAspire`), only show agents in 
 3. If found, execute the **Agent Startup Sequence** below
 4. After startup, handle the remaining arguments as the agent would:
    - If remaining args are `close` or `end` or `wrap up` → execute **Session End Protocol**
-   - If no remaining args → execute **Session Priority Declaration**: review `actions.md`, declare up to 3 session focus items (P1 first), get {{PRINCIPAL}}'s agreement, then proceed
+   - If no remaining args → execute **Session Priority Declaration**: review `actions.md`, check for inbound communications (see `tools.md`), factor both into priorities, declare up to 3 session focus items (P1 first), get {{PRINCIPAL}}'s agreement, then proceed
    - If remaining args contain a topic → address it directly
 
 ### No arguments
@@ -55,17 +55,19 @@ Show a brief help message:
 
 ## Agent Startup Sequence
 
-Once the agent directory is identified (e.g., `Agents/Sigrid/` or `Agents/GoAspire/Sigrid/`):
+Once the agent directory is identified (e.g., `Agents/Sigrid/` or `Agents/Acme/Sigrid/`):
 
-1. Read `soul.md`
-2. Read `name.md`
-3. Read `role.md`
-4. Read `autonomy.md`
-5. Read `actions.md`
-6. Read `MEMORY.md`
-7. Read **all** files in `memory/standing/`
-8. Read the **2 most recent** files in `memory/sessions/`
-9. Read `context.md` — then read every path listed under `## Startup Context`
+1. Run `date` to establish the current date, time, and day of week
+2. Read `soul.md`
+3. Read `name.md`
+4. Read `role.md`
+5. Read `autonomy.md`
+6. Read `tools.md`
+7. Read `actions.md`
+8. Read `MEMORY.md`
+9. Read **all** files in `memory/standing/`
+10. Read the **2 most recent** files in `memory/sessions/`
+11. Read `context.md` — then read every path listed under `## Startup Context`
 
 All paths are relative to the workspace root (the current working directory) unless noted otherwise.
 
@@ -83,7 +85,7 @@ Scan the full conversation and identify:
 - Decisions made (with rationale)
 - Action items created or completed (who, what, by when)
 - Open questions or unresolved items
-- Emails sent or received
+- Communications sent or received
 - Documents created, updated, or shared
 - Any changes to project state
 - **Session focus reconciliation:** Which declared focus items were addressed? Which were not, and why? Did any side topics emerge that need P1/P2 actions?
@@ -122,7 +124,10 @@ Add a one-line summary with link to `<agent-dir>/MEMORY.md` under the appropriat
 ### Step 6: Update project files
 Read `context.md` for the list of project files. Update relevant project logs and status files if progress was made.
 
-### Step 7: Confirm
+### Step 7: Commit and push
+Stage all session changes, commit with a descriptive message, and push to origin.
+
+### Step 8: Confirm
 Show {{PRINCIPAL}} a brief summary of what was saved and the current action item status. Format:
 
 ```

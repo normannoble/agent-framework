@@ -23,12 +23,13 @@ sedi() {
 # ─── Header ───────────────────────────────────────────────────────────────────
 echo ""
 echo -e "${BOLD}Agent Framework Setup${RESET}"
-echo -e "${DIM}Creates persistent AI agents with calibrated autonomy in Claude Code.${RESET}"
+echo -e "${DIM}Build senior AI collaborators with calibrated autonomy in Claude Code.${RESET}"
+echo -e "${DIM}Agents that challenge, drive, and hold you accountable — not task runners.${RESET}"
 echo ""
 
 # ─── 1. Target repository ────────────────────────────────────────────────────
 echo -e "${CYAN}1. Target repository${RESET}"
-echo -e "${DIM}   The git repo where you want to use agents.${RESET}"
+echo -e "${DIM}   Any git repo — personal wiki, knowledgebase, codebase, or workspace.${RESET}"
 read -p "   Path [.]: " TARGET_REPO
 TARGET_REPO="${TARGET_REPO:-.}"
 TARGET_REPO="$(cd "$TARGET_REPO" 2>/dev/null && pwd)" || {
@@ -53,7 +54,8 @@ echo ""
 
 # ─── 3. Naming convention ────────────────────────────────────────────────────
 echo -e "${CYAN}3. Naming convention${RESET}"
-echo -e "${DIM}   Agents need neutral names that don't signal their domain.${RESET}"
+echo -e "${DIM}   Agents get names that outlive their current assignment — neutral, dignified,${RESET}"
+echo -e "${DIM}   and drawn from a deep cultural pool. Each carries an archetype.${RESET}"
 echo ""
 echo "   1) Roman cognomina (default)"
 echo -e "      ${DIM}Cato, Varro, Seneca, Corvus, Regulus, Cassia, Livia, Marius...${RESET}"
@@ -92,14 +94,30 @@ case "$NAMING_CHOICE" in
 esac
 echo ""
 
-# ─── 4. Install conventions ──────────────────────────────────────────────────
-echo -e "${CYAN}4. Installing conventions${RESET}"
+# ─── 4. Install philosophy and conventions ───────────────────────────────────
+echo -e "${CYAN}4. Installing framework${RESET}"
 
+# Philosophy
+if [ -f "$TARGET_REPO/PHILOSOPHY.md" ]; then
+    echo -e "   ${YELLOW}PHILOSOPHY.md already exists in target repo.${RESET}"
+    read -p "   Overwrite? [y/N]: " OVERWRITE_PHIL
+    if [[ ! "$OVERWRITE_PHIL" =~ ^[Yy]$ ]]; then
+        echo "   Keeping existing PHILOSOPHY.md."
+    else
+        cp "$SCRIPT_DIR/PHILOSOPHY.md" "$TARGET_REPO/PHILOSOPHY.md"
+        echo -e "   ${GREEN}Updated $TARGET_REPO/PHILOSOPHY.md${RESET}"
+    fi
+else
+    cp "$SCRIPT_DIR/PHILOSOPHY.md" "$TARGET_REPO/PHILOSOPHY.md"
+    echo -e "   ${GREEN}Created $TARGET_REPO/PHILOSOPHY.md${RESET}"
+fi
+
+# Conventions
 if [ -f "$TARGET_REPO/Agents/CONVENTIONS.md" ]; then
     echo -e "   ${YELLOW}Agents/CONVENTIONS.md already exists in target repo.${RESET}"
     read -p "   Overwrite? [y/N]: " OVERWRITE
     if [[ ! "$OVERWRITE" =~ ^[Yy]$ ]]; then
-        echo "   Skipping conventions install."
+        echo "   Keeping existing CONVENTIONS.md."
         SKIP_CONVENTIONS=true
     fi
 fi
@@ -179,7 +197,7 @@ if [ -f "$TARGET_REPO/CLAUDE.md" ]; then
 
 ## Agents
 
-Persistent AI execution partners. See `Agents/CONVENTIONS.md` for the full framework.
+Persistent AI collaborators with calibrated autonomy. See `PHILOSOPHY.md` for principles, `Agents/CONVENTIONS.md` for mechanics.
 
 | Name | Role |
 |------|------|
@@ -190,6 +208,11 @@ CLAUDEBLOCK
             echo -e "   ${GREEN}Added agents section to CLAUDE.md${RESET}"
         fi
     fi
+    echo ""
+else
+    echo -e "${CYAN}6. CLAUDE.md${RESET}"
+    echo -e "${DIM}   No CLAUDE.md found. Consider creating one — Claude Code reads it on startup${RESET}"
+    echo -e "${DIM}   and it's the best place to document your agents.${RESET}"
     echo ""
 fi
 
@@ -206,6 +229,6 @@ echo "   1. cd $TARGET_REPO"
 echo "   2. Run /create-agent to build your first agent"
 echo "   3. Run /agent <name> to activate it"
 echo ""
-echo -e "${DIM}Tip: Review Agents/CONVENTIONS.md to understand the autonomy model${RESET}"
-echo -e "${DIM}and session mechanics before creating your first agent.${RESET}"
+echo -e "${DIM}Start with PHILOSOPHY.md for the principles, then Agents/CONVENTIONS.md${RESET}"
+echo -e "${DIM}for the mechanics — autonomy model, session focus, and memory system.${RESET}"
 echo ""
