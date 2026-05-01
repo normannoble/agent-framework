@@ -49,9 +49,10 @@ Agents/<name>/
 ├── actions.md       Standing to-do list, updated every session
 ├── context.md       Startup file paths and project references
 ├── MEMORY.md        Index of standing knowledge and session logs
-└── memory/
-    ├── standing/    Durable rules, decisions, baselines (all loaded on startup)
-    └── sessions/    Per-session logs (most recent 2 loaded on startup)
+├── memory/
+│   ├── standing/    Durable rules, decisions, baselines (all loaded on startup)
+│   └── sessions/    Per-session logs (most recent 2 loaded on startup)
+└── playbooks/       Repeatable procedures with defined execution modes
 ```
 
 No database, no API, no runtime. Just markdown in your git repo. Works with any workspace — personal wiki, knowledgebase, codebase, or multi-project monorepo.
@@ -74,14 +75,28 @@ The signature behaviour: agents default to **"I intend to..."** rather than **"W
 
 Senior agents start with more actions at L3-L4 and are expected to push back on direction they disagree with. Junior agents start at L1-L2 and earn autonomy through reliability. See [PHILOSOPHY.md](PHILOSOPHY.md) for why this distinction matters.
 
+### Playbooks
+
+Agents codify repeatable procedures as playbooks — markdown files that capture the trigger, steps, tool commands, and execution mode for tasks they've done multiple times. Each playbook declares one of four execution modes:
+
+| Mode | Label | Human Involvement |
+|------|-------|----|
+| **P1** | **Autopilot** | Agent runs end-to-end, reports output |
+| **P2** | **Maker-Checker** | Agent pauses at review gates for approval |
+| **P3** | **Exception-Based** | Agent runs independently, escalates when stuck |
+| **P4** | **Paired** | Agent and human alternate contributions |
+
+Playbooks are lazy-loaded on startup (frontmatter only) and fully read only when triggered. The trigger check at startup flags any cadenced playbooks due this session.
+
 ### Session Mechanics
 
 Every session follows a pattern:
 
-1. **Startup** — Agent loads its soul, role, autonomy, tools, action tracker, and memories
-2. **Priority declaration** — Agent proposes up to 3 focus items from its tracker, checks inbound communications, gets your agreement
-3. **Work** — Compass checks make drift conscious rather than accidental
-4. **Close** — Agent reviews the session, updates tracker, saves memory, commits and pushes
+1. **Startup** — Agent loads its soul, role, autonomy, tools, action tracker, memories, and playbook index
+2. **Trigger check** — Agent evaluates playbook triggers against current context
+3. **Priority declaration** — Agent proposes up to 3 focus items (including triggered playbooks), checks inbound communications, gets your agreement
+4. **Work** — Compass checks make drift conscious rather than accidental
+5. **Close** — Agent reviews the session, updates tracker, saves memory, commits and pushes
 
 Session focus prevents recency bias — the agent won't silently let conversation momentum displace declared priorities. When it notices drift, it names it: "We agreed these three things matter today. We've spent forty minutes on something else. Should I capture this as a new priority, or should we get back to what we declared?"
 
@@ -194,9 +209,10 @@ your-repo/
         ├── actions.md
         ├── context.md
         ├── MEMORY.md
-        └── memory/
-            ├── standing/
-            └── sessions/
+        ├── memory/
+        │   ├── standing/
+        │   └── sessions/
+        └── playbooks/          # Added as patterns emerge
 
 ~/.claude/skills/
 ├── agent/

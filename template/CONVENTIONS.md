@@ -41,9 +41,10 @@ Agents/<name>/
 ├── actions.md           # Standing action tracker (always current)
 ├── context.md           # Startup context paths and project file references
 ├── MEMORY.md            # Memory index — standing and session sections
-└── memory/
-    ├── standing/        # Durable rules, decisions, baselines
-    └── sessions/        # Per-session logs
+├── memory/
+│   ├── standing/        # Durable rules, decisions, baselines
+│   └── sessions/        # Per-session logs
+└── playbooks/           # Repeatable procedures with defined execution modes
 ```
 
 ### context.md
@@ -253,8 +254,9 @@ Agents have a natural tendency toward recency bias — prioritising whatever was
 At the start of every session (after loading context), the agent:
 1. Reviews `actions.md` and identifies the top priorities (P1 items first, then P2)
 2. Checks for inbound communications (see `tools.md` for triage commands, if configured). If messages exist, factor them into the priority assessment — a message from a stakeholder may elevate or introduce a priority. If no inbound channel is configured or the inbox is empty, move on silently.
-3. Declares a **session focus** — up to 3 items that this session should progress, in priority order. If inbound messages are relevant, note them: "I have a message from [stakeholder] about [topic] — factoring into priorities."
-4. Gets {{PRINCIPAL}}'s agreement before proceeding
+3. Includes any playbooks flagged by the trigger check (startup step 13) — cadenced playbooks that are due this session
+4. Declares a **session focus** — up to 3 items that this session should progress, in priority order. If inbound messages are relevant, note them: "I have a message from [stakeholder] about [topic] — factoring into priorities."
+5. Gets {{PRINCIPAL}}'s agreement before proceeding
 
 This declaration becomes the session's compass. Everything that follows is measured against it.
 
@@ -308,6 +310,8 @@ Individual per-agent skill files are not needed. Agent-specific startup context 
 9. All standing memories
 10. Most recent 2 session memories
 11. Paths listed in `context.md` under `## Startup Context`
+12. Playbook index — glob `playbooks/*.md`, read only frontmatter and first paragraph of each (not full steps)
+13. Trigger check — evaluate each playbook's trigger against today's date, day of week, and session context. Flag any that should execute this session
 
 ### Session End Protocol (standard steps)
 
@@ -391,3 +395,151 @@ When introducing a new tool to the agent framework:
 4. **Agent autonomy.md** — add the tooling actions at the appropriate levels, with a changelog entry
 5. **Create-agent skill** — if the tool applies to all agents, update the `tools.md` template in the skill
 6. **This checklist** — if the tool requires manual admin setup, add a step to the Post-Creation Admin Checklist above
+
+## Playbooks
+
+Repeatable procedures that an agent executes the same way each time. A playbook codifies a task the agent has already done multiple times — it captures the trigger, the steps, the tool commands, the execution mode, and the expected output so the agent doesn't reinvent the process each session.
+
+### Playbooks vs Skills vs Actions
+
+| Concept | What it is | Example |
+|---------|-----------|---------|
+| **Skill** | Atomic recipe — how to do one thing | `/recall` searches memories |
+| **Playbook** | Composed procedure — when and how to execute a multi-step task | Weekly report: gather data → generate report → publish → email |
+| **Action** | Tracked work item — a specific instance of something to do | "#12: Publish W18 report" |
+
+A playbook may invoke one or more skills. An action may reference a playbook ("run the weekly report playbook"). Skills don't know about playbooks; playbooks orchestrate skills.
+
+### Execution Modes
+
+Every playbook declares an execution mode that defines the human involvement pattern. Modes are ordered by decreasing agent independence.
+
+| Mode | Label | Agent does | Human does | Use when |
+|------|-------|-----------|------------|----------|
+| **P1** | **Autopilot** | Executes end-to-end, reports output at session close | Reviews output (no approval gate) | Path is deterministic, low-stakes, agent has done it before |
+| **P2** | **Maker-Checker** | Executes up to defined review gates, then pauses | Approves or redirects at each gate before agent continues | Output is consequential — external-facing, financial, legal |
+| **P3** | **Exception-Based** | Executes independently, escalates when stuck | Unblocks on escalation, agent resumes | Path is mostly known but has foreseeable gaps |
+| **P4** | **Paired** | Handles research, drafting, data work | Provides judgment, strategy, or content the agent can't | Task structurally requires both agent and human contributions |
+
+#### Relationship to Autonomy
+
+Autonomy levels (L1–L5) govern **individual actions** — can the agent send this email without asking? Execution modes govern **composed workflows** — does this multi-step process need human checkpoints?
+
+An agent with L5 authority on every action in a playbook may still run it as P2 Maker-Checker because the combined output is consequential. The two systems are orthogonal:
+- Autonomy doesn't override playbook execution mode
+- Playbook execution mode doesn't restrict autonomy on actions outside the playbook
+
+#### Mode Promotion
+
+Like autonomy, execution modes can be promoted. If a P2 playbook runs successfully three times with no substantive changes at the review gate, consider promoting it to P1. Record the change in the playbook's changelog.
+
+### Directory Structure
+
+Playbooks live under each agent's directory:
+
+```
+Agents/<name>/
+├── ...existing files...
+└── playbooks/
+    ├── weekly-report.md
+    └── data-refresh.md
+```
+
+Agent-specific because playbooks encode how *that agent* does the work. If a playbook genuinely spans multiple agents, it goes in the shared scope (`Agents/playbooks/`) — but this should be rare.
+
+### Playbook File Format
+
+```yaml
+---
+title: <Descriptive name>
+type: playbook
+execution_mode: P1 | P2 | P3 | P4
+owner: <agent name>
+skills: [<skill-1>, <skill-2>]
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+---
+```
+
+### Playbook Body Structure
+
+```markdown
+# <Playbook Name>
+
+<One paragraph: what this playbook does and why it exists.>
+
+## Trigger
+
+<When this playbook should be executed. Can be:>
+<- **Cadence:** "Every Monday" or "End of each week">
+<- **Event:** "When a new item is added to the queue">
+<- **Situation:** "When {{PRINCIPAL}} asks for status">
+<- **Manual:** "When invoked by {{PRINCIPAL}}">
+
+## Inputs
+
+<What the agent needs before starting. Data sources, prerequisites, access.>
+
+## Steps
+
+<Numbered steps. Each step describes what to do and includes the exact
+tool commands needed to execute it in fenced code blocks.>
+
+<Mark review gates and escalation points inline:>
+
+1. Step one
+   ```bash
+   command --to --execute
+   ```
+2. Step two
+3. **[GATE]** Present output to {{PRINCIPAL}} for review before continuing
+4. Step three (only after gate approval)
+
+<For exception-based (P3), mark known failure points:>
+
+1. Step one
+2. Step two — **[ESCALATE if]** external data is unavailable or format has changed
+
+## Output
+
+<What the playbook produces — files, emails, updates, reports.>
+
+## Changelog
+
+| Date | Change | Reason |
+|------|--------|--------|
+```
+
+### Tool Usage in Steps
+
+Steps include the specific tool commands needed to execute them — the exact CLI invocation, API call, or query. This serves two purposes:
+
+1. **Consistency** — the agent executes the same way every time, not re-deriving the approach
+2. **Maintainability** — when a tool changes (new API version, CLI flag, endpoint), the playbook surfaces as a place to update
+
+Embed commands inline within the step they belong to using fenced code blocks. Reference the agent's `tools.md` for account configuration and authentication — playbooks carry the specific invocation, not the setup.
+
+### Lifecycle
+
+**Birth:** A playbook is created when an agent has executed the same task at least twice and the steps are stable enough to codify. Don't write playbooks speculatively — capture proven patterns.
+
+**Refinement:** After each execution, note what worked and what didn't. Update steps, add edge cases, adjust the execution mode if warranted.
+
+**Promotion:** When a P2 playbook consistently passes review gates without changes, promote to P1. Record in the changelog.
+
+**Retirement:** When a playbook is no longer relevant (process changed, responsibility moved), archive or delete it. Don't keep dead playbooks.
+
+### Startup Integration
+
+Playbooks are lazy-loaded to conserve context:
+
+1. **Startup (step 12):** Glob `playbooks/*.md` and read only the frontmatter and first paragraph (description) of each playbook — not the full steps or tool commands
+2. **Trigger check (step 13):** Evaluate each playbook's trigger against today's date, day of week, and session context. Flag any that should execute this session. Include flagged playbooks in the session priority declaration (step 3 of Session Priority Declaration)
+3. **Execution:** When a playbook is triggered, read the full file at that point — steps, tool commands, and all
+
+### Session End Integration
+
+During session end, if a playbook was executed:
+- Note it in the session memory ("Executed: weekly-report playbook")
+- Update the playbook's changelog if the steps deviated or the mode needs adjustment
+- If the agent improvised a multi-step procedure that wasn't a playbook, flag it: "Candidate for new playbook: <description>"
