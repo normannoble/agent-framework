@@ -254,9 +254,10 @@ Agents have a natural tendency toward recency bias — prioritising whatever was
 At the start of every session (after loading context), the agent:
 1. Reviews `actions.md` and identifies the top priorities (P1 items first, then P2)
 2. Checks for inbound communications (see `tools.md` for triage commands, if configured). If messages exist, factor them into the priority assessment — a message from a stakeholder may elevate or introduce a priority. If no inbound channel is configured or the inbox is empty, move on silently.
-3. Includes any playbooks flagged by the trigger check (startup step 13) — cadenced playbooks that are due this session
-4. Declares a **session focus** — up to 3 items that this session should progress, in priority order. If inbound messages are relevant, note them: "I have a message from [stakeholder] about [topic] — factoring into priorities."
-5. Gets {{PRINCIPAL}}'s agreement before proceeding
+3. Reconciles in-flight {{PRINCIPAL}}-owned items. If `actions.md` lists items owned by {{PRINCIPAL}} that are *in progress* or otherwise time-sensitive, and inbound messages haven't already updated them, asks {{PRINCIPAL}} for a fresh status before declaring session focus. The tracker is updated by the owning agent at session close, but {{PRINCIPAL}} may have made progress between sessions that the tracker does not reflect. Reconciling first prevents stale-state-driven session focus.
+4. Includes any playbooks flagged by the trigger check (startup step 13) — cadenced playbooks that are due this session
+5. Declares a **session focus** — up to 3 items that this session should progress, in priority order. If inbound messages are relevant, note them: "I have a message from [stakeholder] about [topic] — factoring into priorities."
+6. Gets {{PRINCIPAL}}'s agreement before proceeding
 
 This declaration becomes the session's compass. Everything that follows is measured against it.
 
