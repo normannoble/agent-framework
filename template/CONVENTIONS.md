@@ -39,6 +39,7 @@ Agents/<name>/
 ├── autonomy.md          # Authority ladder — what the agent owns vs. flags
 ├── tools.md             # Available tools and their configuration
 ├── actions.md           # Standing action tracker (always current)
+├── actions-archive.md   # Completed actions older than 30 days
 ├── context.md           # Startup context paths and project file references
 ├── MEMORY.md            # Memory index — standing and session sections
 ├── memory/
@@ -125,6 +126,26 @@ Priority uses P1/P2/P3:
 - **P3** — Tracked, not urgent. Revisit periodically.
 
 Session memories reference `actions.md` for action items rather than duplicating them. This prevents action items from being lost in old session logs.
+
+#### Tracker Hygiene
+
+1. **No ghosts in Open.** When an item completes, move it to Completed and delete the row from Open. No strikethrough-then-leave-it pattern. The Open section must be a reliable list of live work.
+2. **Fortnightly full pass.** Every other week (or equivalent cadence session), audit the full tracker: refresh stale due dates, cross-check shared items against other agents' trackers, verify statuses against external state, and check P1 count stays under ~8.
+3. **Priority sections.** Structure the Open table with P1 / P2 / P3 sub-sections. Flat lists don't scale past ~30 items.
+4. **Archive completed items monthly.** The Completed table keeps only the last 30 days. Older items move to `actions-archive.md` in the same directory — same table format, out of the startup read path. Create the archive file when the agent is created; first archival happens when items age past 30 days.
+
+#### Tracker Cleanup Procedure
+
+When {{PRINCIPAL}} asks you to review or clean up your action tracker, follow these steps:
+
+1. Remove any struck-through or completed items from Open — move to Completed, delete the row from Open
+2. Archive completed items older than 30 days to `actions-archive.md`
+3. Refresh stale due dates — anything marked "this week" that's >7 days old gets a new date or TBD
+4. Cross-check shared items against other agents' trackers for status changes
+5. Apply P1/P2/P3 sections if not already present
+6. Check P1 count — if >8, something needs deprioritising
+7. Scan for items that may be moot or complete but not marked — present candidates to {{PRINCIPAL}}
+8. Present a summary of changes for {{PRINCIPAL}}'s confirmation before saving
 
 ### MEMORY.md
 
