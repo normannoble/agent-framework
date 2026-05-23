@@ -112,44 +112,73 @@ else
     echo -e "   ${GREEN}Created $TARGET_REPO/PHILOSOPHY.md${RESET}"
 fi
 
-# Conventions
-if [ -f "$TARGET_REPO/Agents/CONVENTIONS.md" ]; then
-    echo -e "   ${YELLOW}Agents/CONVENTIONS.md already exists in target repo.${RESET}"
-    read -p "   Overwrite? [y/N]: " OVERWRITE
-    if [[ ! "$OVERWRITE" =~ ^[Yy]$ ]]; then
+# Workspace Conventions
+if [ -f "$TARGET_REPO/CONVENTIONS.md" ]; then
+    echo -e "   ${YELLOW}CONVENTIONS.md already exists in target repo.${RESET}"
+    read -p "   Overwrite? [y/N]: " OVERWRITE_WC
+    if [[ ! "$OVERWRITE_WC" =~ ^[Yy]$ ]]; then
         echo "   Keeping existing CONVENTIONS.md."
-        SKIP_CONVENTIONS=true
+        SKIP_WORKSPACE_CONVENTIONS=true
     fi
 fi
 
-if [ "$SKIP_CONVENTIONS" != "true" ]; then
-    mkdir -p "$TARGET_REPO/Agents"
-    cp "$SCRIPT_DIR/template/CONVENTIONS.md" "$TARGET_REPO/Agents/CONVENTIONS.md"
-
-    # Replace template markers
-    sedi "s|{{PRINCIPAL}}|${PRINCIPAL}|g" "$TARGET_REPO/Agents/CONVENTIONS.md"
-    sedi "s|{{NAMING_TRADITION}}|${NAMING_TRADITION}|g" "$TARGET_REPO/Agents/CONVENTIONS.md"
-    sedi "s|{{NAMING_DESCRIPTION}}|${NAMING_DESCRIPTION}|g" "$TARGET_REPO/Agents/CONVENTIONS.md"
-    sedi "s|{{NAMING_EXAMPLES}}|${NAMING_EXAMPLES}|g" "$TARGET_REPO/Agents/CONVENTIONS.md"
-
-    echo -e "   ${GREEN}Created $TARGET_REPO/Agents/CONVENTIONS.md${RESET}"
+if [ "$SKIP_WORKSPACE_CONVENTIONS" != "true" ]; then
+    cp "$SCRIPT_DIR/template/CONVENTIONS.md" "$TARGET_REPO/CONVENTIONS.md"
+    echo -e "   ${GREEN}Created $TARGET_REPO/CONVENTIONS.md${RESET}"
 fi
+
+# Agent Conventions
+if [ -f "$TARGET_REPO/agents/CONVENTIONS.md" ]; then
+    echo -e "   ${YELLOW}agents/CONVENTIONS.md already exists in target repo.${RESET}"
+    read -p "   Overwrite? [y/N]: " OVERWRITE_AC
+    if [[ ! "$OVERWRITE_AC" =~ ^[Yy]$ ]]; then
+        echo "   Keeping existing agents/CONVENTIONS.md."
+        SKIP_AGENT_CONVENTIONS=true
+    fi
+fi
+
+if [ "$SKIP_AGENT_CONVENTIONS" != "true" ]; then
+    mkdir -p "$TARGET_REPO/agents"
+    cp "$SCRIPT_DIR/template/agents/CONVENTIONS.md" "$TARGET_REPO/agents/CONVENTIONS.md"
+
+    # Replace template markers in agent conventions
+    sedi "s|{{PRINCIPAL}}|${PRINCIPAL}|g" "$TARGET_REPO/agents/CONVENTIONS.md"
+    sedi "s|{{NAMING_TRADITION}}|${NAMING_TRADITION}|g" "$TARGET_REPO/agents/CONVENTIONS.md"
+    sedi "s|{{NAMING_DESCRIPTION}}|${NAMING_DESCRIPTION}|g" "$TARGET_REPO/agents/CONVENTIONS.md"
+    sedi "s|{{NAMING_EXAMPLES}}|${NAMING_EXAMPLES}|g" "$TARGET_REPO/agents/CONVENTIONS.md"
+
+    echo -e "   ${GREEN}Created $TARGET_REPO/agents/CONVENTIONS.md${RESET}"
+fi
+
+# Shared tools index
+mkdir -p "$TARGET_REPO/agents/tools"
+if [ ! -f "$TARGET_REPO/agents/tools/INDEX.md" ]; then
+    cp "$SCRIPT_DIR/template/agents/tools/INDEX.md" "$TARGET_REPO/agents/tools/INDEX.md"
+    sedi "s|{{PRINCIPAL}}|${PRINCIPAL}|g" "$TARGET_REPO/agents/tools/INDEX.md"
+    echo -e "   ${GREEN}Created $TARGET_REPO/agents/tools/INDEX.md${RESET}"
+else
+    echo -e "   ${DIM}agents/tools/INDEX.md already exists — skipping.${RESET}"
+fi
+
+# Agents skills sync directory
+mkdir -p "$TARGET_REPO/agents/skills"
 echo ""
 
-# ─── 5. Install skills ───────────────────────────────────────────────────────
+# ─── 5. Install skills (project-scoped) ─────────────────────────────────────
 echo -e "${CYAN}5. Skills installation${RESET}"
 echo -e "${DIM}   Two Claude Code skills power the agent system:${RESET}"
 echo -e "${DIM}     /agent        — router that activates agents${RESET}"
 echo -e "${DIM}     /create-agent — interactive agent builder${RESET}"
+echo -e "${DIM}   Skills are installed to .claude/skills/ (project-scoped).${RESET}"
 echo ""
 
-SKILLS_DIR="$HOME/.claude/skills"
+SKILLS_DIR="$TARGET_REPO/.claude/skills"
 
 # Check for existing skills
 EXISTING_SKILLS=false
 if [ -f "$SKILLS_DIR/agent/SKILL.md" ] || [ -f "$SKILLS_DIR/create-agent/SKILL.md" ]; then
     EXISTING_SKILLS=true
-    echo -e "   ${YELLOW}Existing agent skills detected in ~/.claude/skills/.${RESET}"
+    echo -e "   ${YELLOW}Existing agent skills detected in .claude/skills/.${RESET}"
     read -p "   Overwrite? [y/N]: " OVERWRITE_SKILLS
     if [[ ! "$OVERWRITE_SKILLS" =~ ^[Yy]$ ]]; then
         echo "   Skipping skill installation."
@@ -158,7 +187,7 @@ if [ -f "$SKILLS_DIR/agent/SKILL.md" ] || [ -f "$SKILLS_DIR/create-agent/SKILL.m
 fi
 
 if [ "$SKIP_SKILLS" != "true" ]; then
-    read -p "   Install skills to ~/.claude/skills/? [Y/n]: " INSTALL_SKILLS
+    read -p "   Install skills to .claude/skills/? [Y/n]: " INSTALL_SKILLS
     INSTALL_SKILLS="${INSTALL_SKILLS:-Y}"
 
     if [[ "$INSTALL_SKILLS" =~ ^[Yy]$ ]]; then
@@ -172,18 +201,132 @@ if [ "$SKIP_SKILLS" != "true" ]; then
         sedi "s|{{PRINCIPAL}}|${PRINCIPAL}|g" "$SKILLS_DIR/agent/SKILL.md"
         sedi "s|{{PRINCIPAL}}|${PRINCIPAL}|g" "$SKILLS_DIR/create-agent/SKILL.md"
 
-        echo -e "   ${GREEN}Installed /agent to ~/.claude/skills/agent/SKILL.md${RESET}"
-        echo -e "   ${GREEN}Installed /create-agent to ~/.claude/skills/create-agent/SKILL.md${RESET}"
+        echo -e "   ${GREEN}Installed /agent to .claude/skills/agent/SKILL.md${RESET}"
+        echo -e "   ${GREEN}Installed /create-agent to .claude/skills/create-agent/SKILL.md${RESET}"
+
+        # Sync copies to agents/skills/ for browsing
+        mkdir -p "$TARGET_REPO/agents/skills/agent"
+        mkdir -p "$TARGET_REPO/agents/skills/create-agent"
+        cp "$SKILLS_DIR/agent/SKILL.md" "$TARGET_REPO/agents/skills/agent/SKILL.md"
+        cp "$SKILLS_DIR/create-agent/SKILL.md" "$TARGET_REPO/agents/skills/create-agent/SKILL.md"
+        echo -e "   ${DIM}Synced copies to agents/skills/ for browsing.${RESET}"
     else
         echo "   Skipping skill installation."
-        echo -e "   ${DIM}You can install them later by copying from skills/ to ~/.claude/skills/.${RESET}"
+        echo -e "   ${DIM}You can install them later by copying from skills/ to .claude/skills/.${RESET}"
     fi
 fi
 echo ""
 
-# ─── 6. CLAUDE.md integration (optional) ─────────────────────────────────────
+# ─── 6. Workspace directories ───────────────────────────────────────────────
+echo -e "${CYAN}6. Workspace directories${RESET}"
+echo -e "${DIM}   Create the standard workspace folder structure?${RESET}"
+echo -e "${DIM}   (thinking, work, knowledge, outputs — see CONVENTIONS.md)${RESET}"
+read -p "   Create workspace directories? [Y/n]: " CREATE_DIRS
+CREATE_DIRS="${CREATE_DIRS:-Y}"
+
+if [[ "$CREATE_DIRS" =~ ^[Yy]$ ]]; then
+    for DIR in thinking work work/projects work/operations knowledge knowledge/systems knowledge/people knowledge/processes knowledge/company outputs; do
+        mkdir -p "$TARGET_REPO/$DIR"
+    done
+
+    # Create INDEX.md files for top-level folders if they don't exist
+    for DIR_NAME in thinking work knowledge outputs; do
+        if [ ! -f "$TARGET_REPO/$DIR_NAME/INDEX.md" ]; then
+            case "$DIR_NAME" in
+                thinking)
+                    cat > "$TARGET_REPO/$DIR_NAME/INDEX.md" << 'EOF'
+---
+title: Thinking
+type: index
+scope: area
+---
+
+# Thinking
+
+Unstructured capture — ideas, conversations, notes, and backlog items. Low friction, minimal structure.
+EOF
+                    ;;
+                work)
+                    cat > "$TARGET_REPO/$DIR_NAME/INDEX.md" << 'EOF'
+---
+title: Work
+type: index
+scope: area
+---
+
+# Work
+
+Structured work — initiatives and ongoing responsibilities.
+
+## Lanes
+
+- [[work/projects/INDEX|Projects]] — Finite initiatives with clear deliverables and timelines
+- [[work/operations/INDEX|Operations]] — Ongoing responsibilities (no fixed end date)
+EOF
+                    ;;
+                knowledge)
+                    cat > "$TARGET_REPO/$DIR_NAME/INDEX.md" << 'EOF'
+---
+title: Knowledge
+type: index
+scope: area
+---
+
+# Knowledge
+
+Distilled reference material. Items here are maintained over time — they represent settled understanding, not in-progress thinking.
+
+## Categories
+
+- **systems/** — Platform architecture, integrations, and technical concepts
+- **people/** — Context about people you work with
+- **processes/** — Operational processes, standards, and principles
+- **company/** — Org structure, strategy, and business context
+EOF
+                    ;;
+                outputs)
+                    cat > "$TARGET_REPO/$DIR_NAME/INDEX.md" << 'EOF'
+---
+title: Outputs
+type: index
+scope: workspace
+---
+
+# Outputs
+
+Artifacts produced for specific audiences — decks, reports, emails, briefings.
+EOF
+                    ;;
+            esac
+            echo -e "   ${GREEN}Created $DIR_NAME/INDEX.md${RESET}"
+        fi
+    done
+
+    # Create knowledge MOC if it doesn't exist
+    if [ ! -f "$TARGET_REPO/knowledge/MOC.md" ]; then
+        cat > "$TARGET_REPO/knowledge/MOC.md" << 'EOF'
+---
+title: Knowledge Map
+type: moc
+scope: workspace
+---
+
+# Knowledge Map
+
+Conceptual map of knowledge, organized by domain. Each category has its own folder for browsing.
+EOF
+        echo -e "   ${GREEN}Created knowledge/MOC.md${RESET}"
+    fi
+
+    echo -e "   ${GREEN}Workspace directories created.${RESET}"
+else
+    echo "   Skipping workspace directory creation."
+fi
+echo ""
+
+# ─── 7. CLAUDE.md integration (optional) ─────────────────────────────────────
 if [ -f "$TARGET_REPO/CLAUDE.md" ]; then
-    echo -e "${CYAN}6. CLAUDE.md integration${RESET}"
+    echo -e "${CYAN}7. CLAUDE.md integration${RESET}"
     echo -e "${DIM}   Add an agents section to your existing CLAUDE.md?${RESET}"
     read -p "   Add agents section? [Y/n]: " UPDATE_CLAUDE
     UPDATE_CLAUDE="${UPDATE_CLAUDE:-Y}"
@@ -197,7 +340,7 @@ if [ -f "$TARGET_REPO/CLAUDE.md" ]; then
 
 ## Agents
 
-Persistent AI collaborators with calibrated autonomy. See `PHILOSOPHY.md` for principles, `Agents/CONVENTIONS.md` for mechanics.
+Persistent AI collaborators with calibrated autonomy. See `PHILOSOPHY.md` for principles, `agents/CONVENTIONS.md` for mechanics.
 
 | Name | Role |
 |------|------|
@@ -210,9 +353,9 @@ CLAUDEBLOCK
     fi
     echo ""
 else
-    echo -e "${CYAN}6. CLAUDE.md${RESET}"
+    echo -e "${CYAN}7. CLAUDE.md${RESET}"
     echo -e "${DIM}   No CLAUDE.md found. Consider creating one — Claude Code reads it on startup${RESET}"
-    echo -e "${DIM}   and it's the best place to document your agents.${RESET}"
+    echo -e "${DIM}   and it's the best place to document your workspace.${RESET}"
     echo ""
 fi
 
@@ -223,12 +366,21 @@ echo "   Target repo:     $TARGET_REPO"
 echo "   Principal:       $PRINCIPAL"
 echo "   Naming pool:     $NAMING_TRADITION"
 echo ""
+echo -e "${BOLD}Installed:${RESET}"
+echo ""
+echo "   CONVENTIONS.md              — workspace structure conventions"
+echo "   agents/CONVENTIONS.md       — agent framework conventions"
+echo "   agents/tools/INDEX.md       — shared tool index"
+echo "   .claude/skills/agent/       — /agent router skill"
+echo "   .claude/skills/create-agent — /create-agent builder skill"
+echo "   PHILOSOPHY.md               — framework principles"
+echo ""
 echo -e "${BOLD}Next steps:${RESET}"
 echo ""
 echo "   1. cd $TARGET_REPO"
 echo "   2. Run /create-agent to build your first agent"
 echo "   3. Run /agent <name> to activate it"
 echo ""
-echo -e "${DIM}Start with PHILOSOPHY.md for the principles, then Agents/CONVENTIONS.md${RESET}"
+echo -e "${DIM}Start with PHILOSOPHY.md for the principles, then agents/CONVENTIONS.md${RESET}"
 echo -e "${DIM}for the mechanics — autonomy model, session focus, and memory system.${RESET}"
 echo ""
