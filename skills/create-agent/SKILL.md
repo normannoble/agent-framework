@@ -2,7 +2,7 @@
 description: Create a new agent following workspace conventions. Interactive process that defines role, soul, and structure. Use when setting up a new AI collaboration partner for a project or initiative.
 scope: workspace
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash(mkdir), Bash(ls), Bash(date), AskUserQuestion
-argument-hint: [scope — e.g., Acme] (optional in single-domain workspaces)
+argument-hint: "[scope — e.g., Acme] (optional in single-domain workspaces)"
 ---
 
 # /create-agent — Agent Builder
