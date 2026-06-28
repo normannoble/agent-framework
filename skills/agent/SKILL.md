@@ -1,8 +1,8 @@
 ---
-description: Agent router — invoke, list, and manage workspace agents. Use /agent <name> to activate an agent, /agent list to see all agents, or /agent list <scope> for scope-filtered listing.
+description: Agent router — invoke, list, and manage workspace agents. Use /agent <name> to activate an agent, /agent list to see all agents, /agent status for a live org status board, or /agent list <scope> for scope-filtered listing.
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash(date), Bash(ls), AskUserQuestion
-argument-hint: <name> [topic] | list [scope]
+argument-hint: <name> [topic] | list [scope] | status [scope]
 ---
 
 # /agent — Agent Router
@@ -35,6 +35,35 @@ Parse `$ARGUMENTS` and route:
 
 If a scope filter was given (e.g., `/agent list Acme`), only show agents in that scope.
 
+### `/agent status` or `/agent status <scope>`
+
+Render a **live status board** of the whole agent org by reading each agent's tracker at run time, so it is never stale.
+
+1. Run `date` to get today's date (used for staleness).
+2. Glob both `agents/*/context.md` and `agents/*/*/context.md`. For each agent directory, read:
+   - `context.md` frontmatter → `title` (the **Role**) and `scope`.
+   - `actions.md` → the `Last reviewed:` date, and the **open P1 rows** (fall back to P2 if no P1). Take the Action cell of the top 1–2 open items as the agent's **current focus / mission**, and note any whose Status reads blocked / gated / awaiting.
+   - `role.md` → the **Primary Objective** line, as a fallback "current focus" only if the agent has no open actions.
+3. Render a **GitHub-flavoured markdown table**, one row per agent:
+
+   | Agent | Role | Current focus | Updated |
+   |-------|------|---------------|---------|
+
+   **Table formatting rules (so it always renders correctly):**
+   - Keep every cell on a **single line** — summarise; never paste a multi-line action into a cell.
+   - **Replace any `|` inside cell text with `·`** — a literal pipe breaks the column. Strip newlines too.
+   - Keep "Current focus" to the top 1–2 open items, abbreviated to ~8–12 words.
+   - "Updated" = the agent's `Last reviewed:` date; if absent, show `—`.
+   - If an agent has no open actions, show `(idle — no open missions)` in Current focus.
+   - Add a leading **Scope** column **only if** more than one distinct scope exists across the agents (otherwise omit it).
+4. Below the table, add a short cross-org rollup as **bullets** (these are lists, not a grid):
+   - **In flight:** active, unblocked missions across the org.
+   - **Blocked / gated:** items whose status is blocked / gated / awaiting, each with what it waits on.
+   - **Stale (>14 days):** agents whose `Last reviewed` is more than 14 days before today.
+5. If a scope filter was given (e.g., `/agent status Acme`), restrict to that scope.
+
+Heading: `# Agent Org Status — <today's date>` (do **not** hardcode a project name — keep it portable across workspaces).
+
 ### `/agent <name>` or `/agent <name> <topic>`
 1. Find the agent directory: Glob for both `agents/<name>/context.md` and `agents/*/<name>/context.md` (case-insensitive match on directory name)
 2. If not found, say so and suggest `/agent list`
@@ -51,6 +80,8 @@ Show a brief help message:
 /agent <name> <topic>  — activate and work on a topic
 /agent list            — list all agents
 /agent list <scope>    — list agents in a scope
+/agent status          — live status board (roles, missions, freshness)
+/agent status <scope>  — status board for one scope
 ```
 
 ## Agent Startup Sequence
