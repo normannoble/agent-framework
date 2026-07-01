@@ -1,8 +1,8 @@
 ---
-description: Agent router — invoke, list, and manage workspace agents. Use /agent <name> to activate an agent, /agent list to see all agents, /agent status for a live org status board, or /agent list <scope> for scope-filtered listing.
+description: Agent router — invoke, list, and manage workspace agents. Use /agent <name> to activate an agent, /agent list to see all agents, /agent status for a live org status board, /agent next for the single next best action, or /agent list <scope> for scope-filtered listing.
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash(date), Bash(ls), AskUserQuestion
-argument-hint: <name> [topic] | list [scope] | status [scope]
+argument-hint: <name> [topic] | list [scope] | status [scope] | next [scope]
 ---
 
 # /agent — Agent Router
@@ -64,6 +64,29 @@ Render a **live status board** of the whole agent org by reading each agent's tr
 
 Heading: `# Agent Org Status — <today's date>` (do **not** hardcode a project name — keep it portable across workspaces).
 
+### `/agent next` or `/agent next <scope>`
+
+Recommend the **single next best action** across the whole org — which agent to engage, on what, and *why* — so the principal never has to guess where to go next. This is the dependency-aware companion to `/agent status`: status shows the *whole board*; **next** picks the *one move*.
+
+1. Run `date` (for staleness + recency context).
+2. Glob both `agents/*/context.md` and `agents/*/*/context.md`. For each agent read:
+   - `context.md` frontmatter → `title`, `scope`.
+   - `actions.md` → `Last reviewed`, and **every open item** with its **Action text, Owner, and Status**.
+3. **Classify** each open item:
+   - **Actionable now** — Status is *not* blocked / gated / awaiting / holding, and the Owner is the agent or the principal (not "waiting on another agent or an external event").
+   - **Queued** — Status reads blocked / gated / awaiting / holding, or the Action text says it waits on another item, an external event, or incoming evidence. Queued items are **not** candidates for "next."
+4. **Score the actionable items by leverage**, reading the Action text for dependency cues — phrases like *unblocks, gates, blocks #N, head of chain, feeds, →, critical path, tracer bullet, next best action, then*. An item scores higher when it (a) sits on the **stated critical path** / is named the next step, and/or (b) **unblocks the most downstream work** (other agents' items depend on it).
+5. Output a **decisive, single recommendation** — not a list:
+   - **▶ Next:** *Go to **\<Agent>** — **\<action>** — because **\<why: critical path · unblocks X & Y · clears a blocker>**.*
+   - **Then:** the 1–2 actions that come right after it (the chain), one line each.
+   - **Correctly waiting (not your hands yet):** the top queued items + what each waits on — so the principal knows what's *deliberately* parked and doesn't chase it.
+   - If two actions are genuinely co-equal, say so and give the tiebreak rather than hedging.
+6. If a scope filter is given (e.g., `/agent next Acme`), restrict to that scope.
+
+Heading: `# Next Best Action — <today's date>` (no hardcoded project name — keep it portable).
+
+**Judgment note:** this ranks from tracker text. For the nuanced calls (e.g. "queue this decision behind incoming evidence"), activating the **orchestrator** agent gives richer dependency-aware reasoning than the tracker text alone encodes.
+
 ### `/agent <name>` or `/agent <name> <topic>`
 1. Find the agent directory: Glob for both `agents/<name>/context.md` and `agents/*/<name>/context.md` (case-insensitive match on directory name)
 2. If not found, say so and suggest `/agent list`
@@ -82,6 +105,8 @@ Show a brief help message:
 /agent list <scope>    — list agents in a scope
 /agent status          — live status board (roles, missions, freshness)
 /agent status <scope>  — status board for one scope
+/agent next            — the single next best action (which agent, why)
+/agent next <scope>    — next best action within one scope
 ```
 
 ## Agent Startup Sequence
