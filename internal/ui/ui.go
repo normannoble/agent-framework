@@ -305,7 +305,7 @@ func (u *UI) ResolveConflicts(plan *installer.InstallPlan) error {
 func (u *UI) ShowPlan(plan *installer.InstallPlan) {
 	fmt.Fprintln(u.out)
 	fmt.Fprintln(u.out, "Installation plan")
-	fmt.Fprintln(u.out, planTable(plan, u.noColor))
+	fmt.Fprintln(u.out, planTable(plan, u.noColor, planTableOutputWidth(u.out)))
 	for _, note := range plan.Notes {
 		fmt.Fprintf(u.out, "Note: %s\n", note)
 	}

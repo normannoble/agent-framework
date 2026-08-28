@@ -1,29 +1,68 @@
 package ui
 
 import (
+	"io"
+	"strings"
+
 	"charm.land/bubbles/v2/table"
 	"charm.land/lipgloss/v2"
 	"github.com/normannoble/agent-framework/internal/installer"
+	"golang.org/x/term"
 )
 
-const planTableWidth = 90
+const (
+	defaultPlanTableWidth = 90
+	minimumPlanTableWidth = 40
+)
 
-func planTable(plan *installer.InstallPlan, noColor bool) string {
+func planTable(plan *installer.InstallPlan, noColor bool, width int) string {
+	width = max(minimumPlanTableWidth, min(width, defaultPlanTableWidth))
 	rows := planTableRows(plan, noColor)
 	styles := planTableStyles(noColor)
+	columns := planTableColumns(width)
 	model := table.New(
-		table.WithColumns([]table.Column{
-			{Title: "Action", Width: 11},
-			{Title: "Path", Width: 42},
-			{Title: "Details", Width: 31},
-		}),
+		table.WithColumns(columns),
 		table.WithRows(rows),
 		table.WithHeight(max(2, len(rows)+1)),
-		table.WithWidth(planTableWidth),
+		table.WithWidth(width),
 		table.WithFocused(false),
 		table.WithStyles(styles),
 	)
-	return model.View()
+
+	lines := strings.Split(model.View(), "\n")
+	for index := range lines {
+		// Bubbles pads every row to the configured width. Removing only the
+		// right edge prevents invisible padding from wrapping into blank rows.
+		lines[index] = strings.TrimRight(lines[index], " \t")
+	}
+	return strings.Join(lines, "\n")
+}
+
+func planTableOutputWidth(out io.Writer) int {
+	writer, ok := out.(interface{ Fd() uintptr })
+	if !ok || !term.IsTerminal(int(writer.Fd())) {
+		return defaultPlanTableWidth
+	}
+	width, _, err := term.GetSize(int(writer.Fd()))
+	if err != nil {
+		return defaultPlanTableWidth
+	}
+	return max(minimumPlanTableWidth, width-2)
+}
+
+func planTableColumns(width int) []table.Column {
+	const (
+		actionWidth      = 11
+		cellSpacingWidth = 6
+	)
+	remaining := max(2, width-actionWidth-cellSpacingWidth)
+	pathWidth := max(1, remaining*58/100)
+	detailsWidth := max(1, remaining-pathWidth)
+	return []table.Column{
+		{Title: "Action", Width: actionWidth},
+		{Title: "Path", Width: pathWidth},
+		{Title: "Details", Width: detailsWidth},
+	}
 }
 
 func planTableRows(plan *installer.InstallPlan, noColor bool) []table.Row {

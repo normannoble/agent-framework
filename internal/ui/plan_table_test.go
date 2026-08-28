@@ -11,7 +11,7 @@ import (
 
 func TestPlanTableRendersEveryChangeWithoutSelectionDecoration(t *testing.T) {
 	plan := sampleTablePlan()
-	view := ansi.Strip(planTable(plan, true))
+	view := ansi.Strip(planTable(plan, true, defaultPlanTableWidth))
 
 	for _, text := range []string{
 		"Action",
@@ -51,7 +51,7 @@ func TestPlanTableNeverUsesRowBackgrounds(t *testing.T) {
 			}
 		}
 
-		view := planTable(sampleTablePlan(), noColor)
+		view := planTable(sampleTablePlan(), noColor, defaultPlanTableWidth)
 		if noColor && strings.Contains(view, "\x1b") {
 			t.Fatalf("no-color table contains ANSI escapes: %q", view)
 		}
@@ -59,6 +59,19 @@ func TestPlanTableNeverUsesRowBackgrounds(t *testing.T) {
 			if strings.Contains(view, sequence) {
 				t.Fatalf("noColor=%v rendered table contains selection sequence %q: %q", noColor, sequence, view)
 			}
+		}
+	}
+}
+
+func TestPlanTableFitsWithoutWrappingIntoBlankRows(t *testing.T) {
+	const width = 72
+	view := planTable(sampleTablePlan(), true, width)
+	for lineNumber, line := range strings.Split(view, "\n") {
+		if strings.HasSuffix(line, " ") {
+			t.Fatalf("line %d has trailing padding: %q", lineNumber+1, line)
+		}
+		if got := ansi.StringWidth(line); got > width {
+			t.Fatalf("line %d width = %d; want at most %d: %q", lineNumber+1, got, width, line)
 		}
 	}
 }
