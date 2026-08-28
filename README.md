@@ -57,6 +57,33 @@ $env.AGENT_FRAMEWORK_BINARY = (pwd | path join dist agent-framework)
 hide-env AGENT_FRAMEWORK_BINARY
 ```
 
+### Releasing the CLI
+
+A merge does not update the CLI downloaded by `install.sh`. Publish a new release when the Go CLI, embedded framework templates, or embedded skills change. Documentation-only and website-only changes do not require a CLI release.
+
+First, choose the next version and update the fallback `VERSION` near the top of `install.sh`. The release tag must match it exactly; for example, `VERSION=${AGENT_FRAMEWORK_VERSION:-0.1.1}` requires the tag `v0.1.1`. Commit that version bump and get it merged into `main` before tagging.
+
+From an up-to-date `main` checkout, create and push the matching tag:
+
+```nu
+git switch main
+git pull --ff-only
+git tag v0.1.1
+git push origin v0.1.1
+```
+
+Pushing the tag starts `.github/workflows/release.yml`. The workflow verifies the version, runs the tests and shell checks, builds checksummed binaries for macOS and Linux on ARM64 and AMD64, smoke-tests the bootstrap, and publishes the GitHub Release.
+
+Watch the run and verify the published release with GitHub CLI:
+
+```nu
+let run_id = (gh run list --workflow release.yml --limit 1 --json databaseId --jq '.[0].databaseId')
+gh run watch $run_id
+gh release view v0.1.1
+```
+
+Always increment the version for a new release. Do not move or reuse an existing release tag.
+
 ### Automation and CI
 
 The same installer has a fully non-interactive interface:
