@@ -15,13 +15,64 @@ See [PHILOSOPHY.md](PHILOSOPHY.md) for the full position.
 ## Quick Start
 
 ```bash
+curl -fsSL https://agent-framework.sh/install.sh | sh
+```
+
+The installer downloads the release asset for your operating system and architecture, verifies its SHA-256 checksum, and opens an interactive terminal wizard. It collects the target repository, principal, naming tradition, and optional components, then shows the complete installation plan before writing anything. No Python or Go installation is required.
+
+### Run from a source checkout
+
+Developing the installer requires Go 1.25.8 or newer:
+
+```bash
 git clone https://github.com/normannoble/agent-framework.git
 cd agent-framework
-chmod +x setup.sh
 ./setup.sh
 ```
 
-The setup script asks three questions (target repo, your name, naming convention), then installs everything you need. Your first agent is ten minutes away.
+`setup.sh` builds a temporary native binary from the checkout and runs the same wizard. It does not install anything globally.
+
+The CLI is written in Go and uses Charm's [Huh](https://github.com/charmbracelet/huh) forms with a project-owned Lip Gloss theme. Framework templates and skills are embedded in the release binary.
+
+### Public installer
+
+`install.sh` is the release bootstrap served by the project domain:
+
+```bash
+curl -fsSL https://agent-framework.sh/install.sh | sh
+```
+
+The bootstrap detects macOS or Linux and ARM64 or AMD64, downloads the pinned binary from GitHub Releases, verifies the adjacent `.sha256` file, and runs `agent-framework init`. The temporary binary is removed when setup exits.
+
+To test that exact release path locally from Nushell before publishing:
+
+```nu
+with-env {GO111MODULE: on} {
+  go build -o dist/agent-framework ./cmd/agent-framework
+}
+let target = (mktemp -d)
+git -C $target init -q
+$env.AGENT_FRAMEWORK_BINARY = (pwd | path join dist agent-framework)
+./install.sh $target
+hide-env AGENT_FRAMEWORK_BINARY
+```
+
+### Automation and CI
+
+The same installer has a fully non-interactive interface:
+
+```bash
+curl -fsSL https://agent-framework.sh/install.sh | sh -s -- ./my-repo \
+  --principal Fauzaan \
+  --naming roman \
+  --skills \
+  --workspace \
+  --no-claude \
+  --conflict fail \
+  --yes
+```
+
+Use `--dry-run` to preview without writing and add `--json` for machine-readable output. An unresolved inspection is returned with `plan.ready: false`; automation should check that field. `--yes` approves the final plan but never implies that customized files may be overwritten.
 
 ## What Gets Installed
 
@@ -191,16 +242,12 @@ Lifecycle flows connect the areas: thinking → work (when ideas become active),
 
 ### What the Setup Script Does
 
-1. **Asks for your target repository** — any git repo where you want to use agents
-2. **Asks for your name** — the "principal" who directs agents (default: "the principal")
-3. **Asks for a naming convention** — Roman cognomina, Norse sagas, or Hellenic sages
-4. **Installs `PHILOSOPHY.md`** — the principles behind the framework
-5. **Installs `CONVENTIONS.md`** — workspace structure conventions
-6. **Installs `agents/CONVENTIONS.md`** — agent framework conventions
-7. **Installs `agents/tools/INDEX.md`** — shared tool index
-8. **Installs `/agent` and `/create-agent` skills** to `.claude/skills/` (project-scoped)
-9. **Creates workspace directories** — thinking, work, knowledge, outputs (optional)
-10. **Optionally updates `CLAUDE.md`** — adds an agents table if one exists
+1. **Collects setup choices interactively** — arrow-key menus for the target, principal, naming convention, skills, workspace directories, and `CLAUDE.md` integration
+2. **Preflights the complete change set** — identifies additions, managed updates, unchanged files, and customized conflicts without writing anything
+3. **Reviews conflicts safely** — keep, replace, or inspect a diff; existing files are kept by default
+4. **Shows the final plan** — every file and directory is listed before confirmation
+5. **Applies safely** — uses atomic per-file replacements and rolls back caught failures while installing philosophy, conventions, shared tools, skills, workspace directories, and the optional managed `CLAUDE.md` block
+6. **Records managed state** — `.agent-framework/install.json` makes identical reruns true no-ops and enables safe future updates
 
 ### Creating Your First Agent
 

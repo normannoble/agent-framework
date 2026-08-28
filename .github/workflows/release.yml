@@ -1,0 +1,148 @@
+name: Release installer
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Install Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+
+      - name: Verify tag matches bootstrap version
+        run: |
+          version_line=$(grep '^VERSION=' install.sh)
+          version=${version_line#*:-}
+          version=${version%\}}
+          test -n "$version"
+          test "$GITHUB_REF_NAME" = "v$version"
+
+      - name: Test and vet source
+        env:
+          GO111MODULE: "on"
+        run: |
+          go test ./...
+          go vet ./...
+
+      - name: Verify shell launchers
+        run: |
+          sh -n install.sh
+          sh -n init.sh
+          sh -n setup.sh
+          shellcheck install.sh init.sh setup.sh
+
+  build:
+    needs: verify
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+          - goos: linux
+            goarch: arm64
+          - goos: darwin
+            goarch: amd64
+          - goos: darwin
+            goarch: arm64
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Install Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+
+      - name: Build release binary
+        env:
+          CGO_ENABLED: "0"
+          GO111MODULE: "on"
+          GOARCH: ${{ matrix.goarch }}
+          GOOS: ${{ matrix.goos }}
+        run: |
+          version=${GITHUB_REF_NAME#v}
+          asset="agent-framework_${version}_${GOOS}_${GOARCH}"
+          mkdir -p dist
+          go build \
+            -trimpath \
+            -ldflags "-s -w -X github.com/normannoble/agent-framework.Version=$version -X github.com/normannoble/agent-framework.SourceCommit=$GITHUB_SHA" \
+            -o "dist/$asset" \
+            ./cmd/agent-framework
+          (cd dist && sha256sum "$asset" > "$asset.sha256")
+
+      - name: Upload release binary
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dist/*
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Download release binaries
+        uses: actions/download-artifact@v8
+        with:
+          pattern: release-*
+          path: dist
+          merge-multiple: true
+
+      - name: Verify release checksums
+        run: |
+          cd dist
+          for checksum in *.sha256; do
+            sha256sum -c "$checksum"
+          done
+
+      - name: Smoke-test release bootstrap
+        run: |
+          version=${GITHUB_REF_NAME#v}
+          binary="$PWD/dist/agent-framework_${version}_linux_amd64"
+          chmod 0755 "$binary"
+          "$binary" --version | grep -F "$version"
+          target=$(mktemp -d)
+          git -C "$target" init -q
+          AGENT_FRAMEWORK_BINARY="$binary" \
+            ./install.sh "$target" \
+              --principal ReleaseTest \
+              --no-skills \
+              --no-workspace \
+              --no-claude \
+              --conflict fail \
+              --yes \
+              --no-color
+          test -f "$target/.agent-framework/install.json"
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" dist/* --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" dist/* \
+              --verify-tag \
+              --generate-notes \
+              --title "Agent Framework $GITHUB_REF_NAME"
+          fi
