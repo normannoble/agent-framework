@@ -19,10 +19,11 @@ var ErrCancelled = errors.New("setup cancelled")
 
 // UI owns all terminal interaction for the installer wizard.
 type UI struct {
-	ctx   context.Context
-	in    io.Reader
-	out   io.Writer
-	theme huh.Theme
+	ctx     context.Context
+	in      io.Reader
+	out     io.Writer
+	noColor bool
+	theme   huh.Theme
 }
 
 // New constructs a terminal UI using the supplied streams.
@@ -31,10 +32,11 @@ func New(ctx context.Context, in io.Reader, out io.Writer, noColor bool) *UI {
 		ctx = context.Background()
 	}
 	return &UI{
-		ctx:   ctx,
-		in:    in,
-		out:   out,
-		theme: Theme(noColor),
+		ctx:     ctx,
+		in:      in,
+		out:     out,
+		noColor: noColor,
+		theme:   Theme(noColor),
 	}
 }
 
@@ -303,21 +305,7 @@ func (u *UI) ResolveConflicts(plan *installer.InstallPlan) error {
 func (u *UI) ShowPlan(plan *installer.InstallPlan) {
 	fmt.Fprintln(u.out)
 	fmt.Fprintln(u.out, "Installation plan")
-	fmt.Fprintf(u.out, "%-11s %-42s %s\n", "Action", "Path", "Details")
-	for _, change := range plan.Files {
-		fmt.Fprintf(
-			u.out,
-			"%-11s %-42s %s\n",
-			statusLabel(change.Status),
-			change.RelativePath,
-			change.Label,
-		)
-	}
-	for _, directory := range plan.Directories {
-		if directory.Create {
-			fmt.Fprintf(u.out, "%-11s %-42s %s\n", "Add", directory.RelativePath+"/", "Directory")
-		}
-	}
+	fmt.Fprintln(u.out, planTable(plan, u.noColor))
 	for _, note := range plan.Notes {
 		fmt.Fprintf(u.out, "Note: %s\n", note)
 	}
