@@ -3,3 +3,6 @@
 *.swo
 *~
 .env
+dist/
+coverage.out
+*.test
