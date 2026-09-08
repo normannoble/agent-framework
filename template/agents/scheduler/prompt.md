@@ -20,6 +20,8 @@ Read `agents/scheduled-tasks.md`. If the file cannot be read, abort immediately.
 
 ### 4. Determine due tasks
 
+The gate (`agents/scheduler/tick.sh` → `gate.py`) already decided at least one task is due and named it in your prompt. Re-check with the rules below anyway — the register is the source of truth, and a task the gate missed (or one it named that has since run) must be handled correctly.
+
 For each task in the register:
 - Skip if **Enabled** is `false`
 - Parse the **Schedule** cron expression (`M H DoM Mon DoW`)

@@ -8,11 +8,9 @@ set -euo pipefail
 # ON WAKE. A closed/asleep laptop that skips the :07 slot runs the job as soon as
 # it wakes, so the cycle survives a closed laptop. Plain cron just silently skips.
 #
-# Why the command sources nvm: launchd starts with a bare environment and no login
-# shell config (nvm init usually lives in ~/.zshrc, which bash never reads). Without
-# node/npx on PATH, every npx-based MCP server (Airtable, Slack) fails ENOENT inside a
-# tick. Sourcing ~/.nvm/nvm.sh puts the nvm `default` node on PATH — and because it
-# resolves the alias, it survives node version bumps.
+# The job runs tick.sh. tick.sh sources nvm (launchd has a bare PATH, and npx-based MCP
+# servers need node), runs gate.py against the register, and starts `claude -p` only when
+# a task is actually due. An idle hour costs one log line, not a Claude run.
 #
 # This DRAFT is not run automatically. Review it, then run it yourself:
 #   bash agents/scheduler/install-launchd.sh
@@ -31,15 +29,9 @@ if [[ ! -f "$WORKSPACE/agents/scheduled-tasks.md" ]]; then
     exit 1
 fi
 
-# Find claude CLI
-if command -v claude &>/dev/null; then
-    CLAUDE_BIN="$(command -v claude)"
-elif [[ -x "$HOME/.claude/bin/claude" ]]; then
-    CLAUDE_BIN="$HOME/.claude/bin/claude"
-elif [[ -x "/usr/local/bin/claude" ]]; then
-    CLAUDE_BIN="/usr/local/bin/claude"
-else
-    echo "Error: Cannot find claude CLI. Install it or add it to PATH."
+TICK="$SCRIPT_DIR/tick.sh"
+if [[ ! -x "$TICK" ]]; then
+    echo "Error: $TICK missing or not executable"
     exit 1
 fi
 
@@ -47,7 +39,7 @@ LOGS_DIR="$WORKSPACE/agents/scheduler/logs"
 mkdir -p "$LOGS_DIR"
 
 echo "Workspace:  $WORKSPACE"
-echo "Claude CLI: $CLAUDE_BIN"
+echo "Tick:       $TICK"
 echo "Plist:      $PLIST"
 
 # Unload any existing job so this is idempotent
@@ -69,7 +61,7 @@ cat > "$PLIST" <<PLIST_EOF
     <array>
         <string>/bin/bash</string>
         <string>-lc</string>
-        <string>cd "$WORKSPACE" &amp;&amp; export NVM_DIR="\$HOME/.nvm" &amp;&amp; [ -s "\$NVM_DIR/nvm.sh" ] &amp;&amp; . "\$NVM_DIR/nvm.sh" ; "$CLAUDE_BIN" -p "Read agents/scheduler/prompt.md and follow its instructions exactly." --dangerously-skip-permissions --max-turns 50 &gt;&gt; "$LOGS_DIR/cron.log" 2&gt;&amp;1</string>
+        <string>"$TICK" &gt;&gt; "$LOGS_DIR/launchd.out.log" 2&gt;&amp;1</string>
     </array>
 
     <!-- Fire hourly at :07. launchd runs a missed slot on next wake. -->
@@ -93,6 +85,6 @@ PLIST_EOF
 launchctl load -w "$PLIST"
 
 echo ""
-echo "Installed and loaded. Scheduler fires at :07 every hour (catches up on wake)."
+echo "Installed and loaded. Scheduler fires at :07 every hour (catches up on wake); Claude runs only when a task is due."
 echo "Verify: launchctl list | grep $LABEL"
 echo "Logs:   $LOGS_DIR/cron.log"

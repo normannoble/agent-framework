@@ -22,21 +22,11 @@ if [[ ! -f "$WORKSPACE/agents/scheduled-tasks.md" ]]; then
     exit 1
 fi
 
-# Find claude CLI
-CLAUDE_BIN=""
-if command -v claude &>/dev/null; then
-    CLAUDE_BIN="$(command -v claude)"
-elif [[ -x "$HOME/.claude/bin/claude" ]]; then
-    CLAUDE_BIN="$HOME/.claude/bin/claude"
-elif [[ -x "/usr/local/bin/claude" ]]; then
-    CLAUDE_BIN="/usr/local/bin/claude"
-else
-    echo "Error: Cannot find claude CLI. Install it or add it to PATH."
-    exit 1
-fi
+TICK="$SCRIPT_DIR/tick.sh"
+[[ -x "$TICK" ]] || { echo "Error: $TICK missing or not executable"; exit 1; }
 
 echo "Workspace: $WORKSPACE"
-echo "Claude CLI: $CLAUDE_BIN"
+echo "Tick:      $TICK"
 
 # Check if cron entry already exists
 if crontab -l 2>/dev/null | grep -q "$MARKER"; then
@@ -51,12 +41,12 @@ fi
 LOGS_DIR="$WORKSPACE/agents/scheduler/logs"
 mkdir -p "$LOGS_DIR"
 
-CRON_ENTRY="7 * * * * cd $WORKSPACE && $CLAUDE_BIN -p \"Read agents/scheduler/prompt.md and follow its instructions exactly.\" --dangerously-skip-permissions --max-turns 50 >> $LOGS_DIR/cron.log 2>&1 # $MARKER"
+CRON_ENTRY="7 * * * * $TICK >> $LOGS_DIR/launchd.out.log 2>&1 # $MARKER"
 
 # Append to crontab
 (crontab -l 2>/dev/null || true; echo "$CRON_ENTRY") | crontab -
 
-echo "Installed. Scheduler will run at :07 every hour."
+echo "Installed. Scheduler will run at :07 every hour; Claude runs only when a task is due."
 echo ""
 echo "Entry:"
 crontab -l | grep "$MARKER"

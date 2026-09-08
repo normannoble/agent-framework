@@ -1,8 +1,8 @@
 ---
-description: Set up the current repository as an agent workspace — creates agents/CONVENTIONS.md (extends the plugin master), the shared tools index, and optional workspace folders. Run once per repo, before /agents:new.
+description: Set up the current repository as an agent workspace — creates agents/CONVENTIONS.md (extends the plugin master), the shared tools index, the scheduler folder and task register, and optional workspace folders. Run once per repo, before /agents:new. Safe to re-run: it only adds what is missing.
 disable-model-invocation: true
-allowed-tools: Read, Write, Glob, Bash(ls), Bash(mkdir), Bash(cat), Bash(git), AskUserQuestion
-argument-hint: [--principal <name>] [--naming roman|norse|hellenic] [--workspace | --no-workspace]
+allowed-tools: Read, Write, Edit, Glob, Bash(ls), Bash(mkdir), Bash(cat), Bash(cp), Bash(chmod), Bash(sed), Bash(git), AskUserQuestion
+argument-hint: [--principal <name>] [--naming roman|norse|hellenic] [--workspace | --no-workspace] [--no-scheduler]
 ---
 
 # /agents:init — Workspace Setup
@@ -15,10 +15,11 @@ Run `ls -a` and glob for these. Note which already exist:
 
 - `agents/CONVENTIONS.md`
 - `agents/tools/INDEX.md`
+- `agents/scheduler/` and `agents/scheduled-tasks.md`
 - `CONVENTIONS.md`, `PHILOSOPHY.md`, `CLAUDE.md`
 - `thinking/`, `work/projects/`, `work/operations/`, `knowledge/`, `outputs/`
 
-If `agents/CONVENTIONS.md` already exists and has `extends:` in its frontmatter, say the workspace is already set up, show what it contains, and stop.
+If `agents/CONVENTIONS.md` already exists and has `extends:` in its frontmatter, the workspace is set up. Say so, then continue with **backfill only**: skip the questions in step 2 (take `principal` from the frontmatter), and create only the pieces in step 3 that are missing (typically the scheduler folder and register). Do not rewrite existing files.
 
 Resolve the plugin's template folder: `ls "${CLAUDE_PLUGIN_ROOT}/template"`. If the variable is empty, glob `~/.claude/plugins/cache/*/agents/*/template` and take the highest version. Call this `TEMPLATE`.
 
@@ -47,7 +48,7 @@ naming-examples: <pool>
 reserved: []
 ticket-column: Ticket
 inbound: none
-scheduler: none
+scheduler: none   # launchd | cron once /agents:schedule install has run
 ---
 
 # Agent Conventions — <repo folder name>
@@ -58,6 +59,12 @@ No workspace-specific overrides yet. The master applies in full.
 ```
 
 **`agents/tools/INDEX.md`** (if missing): copy `TEMPLATE/agents/tools/INDEX.md`, replacing `{{PRINCIPAL}}` with the principal.
+
+**Scheduler** (unless `--no-scheduler`; skip any part that exists):
+- `mkdir -p agents/scheduler/logs` and copy `TEMPLATE/agents/scheduler/{prompt.md,policies.md,tick.sh,gate.py,install-launchd.sh,setup.sh}` into `agents/scheduler/`. Replace `{{PRINCIPAL}}` in the copies with the principal. `chmod +x` the two `.sh` files and `tick.sh`.
+- Copy `TEMPLATE/agents/scheduler/scheduled-tasks.md` to `agents/scheduled-tasks.md`, replacing `{{PRINCIPAL}}` and `YYYY-MM-DD` with today's date. The register ships with one disabled `example-task`.
+- Add `agents/scheduler/logs/` to `.gitignore` if not already ignored.
+- Do **not** install the launchd/cron job here. Say: `Timer not installed. When you add a real task, run /agents:schedule install.`
 
 **Workspace layout** (if chosen): `mkdir -p thinking work/projects work/operations knowledge/systems knowledge/people knowledge/processes knowledge/company outputs`. Copy `TEMPLATE/CONVENTIONS.md` to `CONVENTIONS.md` and `TEMPLATE/../PHILOSOPHY.md` to `PHILOSOPHY.md` only if each is missing. Put an empty `.gitkeep` in each new empty folder.
 
@@ -72,7 +79,7 @@ Persistent AI collaborators with calibrated autonomy. See `agents/CONVENTIONS.md
 |------|------|
 | *(run `/agents:new` to add the first one)* | |
 
-Start one with `/agents:start <name>`. List with `/agents:list`. Board: `/agents:status`. One move: `/agents:next`.
+Start one with `/agents:start <name>`. List with `/agents:list`. Board: `/agents:status`. One move: `/agents:next`. Scheduled tasks: `/agents:schedule`.
 ```
 
 ## 4. Confirm
@@ -80,8 +87,9 @@ Start one with `/agents:start <name>`. List with `/agents:list`. Board: `/agents
 Show a short table of what was created and what was skipped because it existed. Then say:
 
 ```
-Next: /agents:new   — design and create your first agent
+Next: /agents:new        — design and create your first agent
 Then: /agents:start <name>
+Later: /agents:schedule  — add an unattended task (then `install` to start the timer)
 Guide: /agents:help
 ```
 
