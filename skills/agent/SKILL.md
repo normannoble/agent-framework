@@ -2,7 +2,7 @@
 description: Agent router — invoke, list, and manage workspace agents. Use /agent <name> to activate an agent, /agent list to see all agents, /agent status for a live org status board, /agent next for the single next best action, or /agent list <scope> for scope-filtered listing.
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash(date), Bash(ls), AskUserQuestion
-argument-hint: <name> [topic] | list [scope] | status [scope] | next [scope]
+argument-hint: <name> [topic] | list [scope|all] | status [scope|all] | next [scope|all]
 ---
 
 # /agent — Agent Router
@@ -16,7 +16,11 @@ Workspaces use one of two agent directory layouts:
 - **Multi-domain**: `agents/<scope>/<name>/` — scope subdirectories group agents by area
 - **Single-domain**: `agents/<name>/` — no scope layer, agents are direct children
 
-To detect: glob for both `agents/*/context.md` and `agents/*/*/context.md`. Use whichever matches (or both if mixed). The workspace root is the current working directory.
+To detect: glob for both `agents/*/context.md` and `agents/*/*/context.md`. Use whichever matches (or both if mixed). The workspace root is the current working directory. Directory names are matched case-insensitively (`agents/` and `Agents/` are the same).
+
+**Retired agents.** A `context.md` whose frontmatter has `status: retired` is hidden from `list`, `status`, and `next` unless the argument `all` is given. Activating a retired agent by name still works — say "<name> is retired since <date>" first, then continue.
+
+**Conventions inheritance.** Wherever this skill says "read `agents/CONVENTIONS.md`": read the workspace file; if its frontmatter has `extends: <path>`, read that master file **first**, then the workspace file. The workspace file wins on conflict. Placeholders in the master (`{{PRINCIPAL}}`, `{{NAMING_TRADITION}}`, `{{NAMING_EXAMPLES}}`) take their values from the workspace file's frontmatter (`principal`, `naming`, `naming-examples`).
 
 ## Routing
 
@@ -33,7 +37,7 @@ Parse `$ARGUMENTS` and route:
 | Sigrid | — | Senior Product Manager |
 ```
 
-If a scope filter was given (e.g., `/agent list Acme`), only show agents in that scope.
+If a scope filter was given (e.g., `/agent list Acme`), only show agents in that scope. `/agent list all` includes retired agents, with a Status column.
 
 ### `/agent status` or `/agent status <scope>`
 
@@ -103,6 +107,7 @@ Show a brief help message:
 /agent <name> <topic>  — activate and work on a topic
 /agent list            — list all agents
 /agent list <scope>    — list agents in a scope
+/agent list all        — include retired agents
 /agent status          — live status board (roles, missions, freshness)
 /agent status <scope>  — status board for one scope
 /agent next            — the single next best action (which agent, why)
@@ -114,7 +119,7 @@ Show a brief help message:
 Once the agent directory is identified (e.g., `agents/Sigrid/` or `agents/Acme/Sigrid/`):
 
 1. Run `date` to establish the current date, time, and day of week
-2. Read `agents/CONVENTIONS.md`
+2. Read `agents/CONVENTIONS.md` (master first if it `extends` one — see Conventions inheritance above)
 3. Read `soul.md`
 4. Read `name.md`
 5. Read `role.md`
@@ -128,6 +133,7 @@ Once the agent directory is identified (e.g., `agents/Sigrid/` or `agents/Acme/S
 13. Read `context.md` — then read every path listed under `## Startup Context`
 14. Playbook index — glob `playbooks/*.md`, read only frontmatter and first paragraph of each (not full steps)
 15. Trigger check — evaluate each playbook's trigger against today's date, day of week, and session context. Flag any that should execute this session
+16. Drain the scheduled-run inbox — if `memory/scheduled/inbox.md` exists, read it. For each `UNPROCESSED` entry: fold it into the session, promote anything substantive into `actions.md` or a memory entry, then flip it to `PROCESSED`. Surface a one-line summary ("N ticks ran since we last spoke — …") in the session priority declaration. Absent file = no-op. See `agents/CONVENTIONS.md` § Session Types
 
 All paths are relative to the agent directory unless prefixed with `agents/` or the workspace root.
 

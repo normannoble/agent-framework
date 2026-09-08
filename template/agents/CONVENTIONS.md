@@ -2,6 +2,27 @@
 
 How to build and structure agents in this workspace.
 
+## Inheritance (shared master + workspace overrides)
+
+This file can be used two ways:
+
+- **Copied** into a workspace as `agents/CONVENTIONS.md` (what `setup.sh` does). Placeholders like `{{PRINCIPAL}}` are substituted at install time.
+- **Shared.** The workspace's `agents/CONVENTIONS.md` stays short and declares in its frontmatter:
+
+  ```yaml
+  ---
+  extends: /path/to/agent-framework/template/agents/CONVENTIONS.md
+  principal: <name>
+  naming: <tradition>            # e.g. Roman cognomina
+  naming-examples: <comma list>  # the pool
+  reserved: [<names in use>]
+  ---
+  ```
+
+  The router reads the master first, then the workspace file. **The workspace file wins on conflict.** It should contain only rules that differ from, or add to, the master. Where the master says `{{PRINCIPAL}}`, `{{NAMING_TRADITION}}`, `{{NAMING_EXAMPLES}}`, read the value from the workspace frontmatter.
+
+Shared mode means one fix in the master reaches every workspace. Prefer it when one person runs several workspaces.
+
 ---
 
 # Part 1: Agent Structure
@@ -135,6 +156,8 @@ When {{PRINCIPAL}} asks you to review or clean up your action tracker, follow th
 
 ### context.md
 
+Frontmatter carries `scope` and `title`. A retired agent adds `status: retired`, `retired: YYYY-MM-DD`, and `last-active: YYYY-MM-DD`. Retired agents keep their files (history has value) but are hidden from `/agent list`, `/agent status`, and `/agent next` unless `all` is passed. Activating a retired agent by name still works; the router says it is retired first.
+
 Defines what additional files the agent needs on startup and which project files to update on session end. Frontmatter includes `scope` and `title` (used by `/agent list`). Body has two sections:
 - **Startup Context** — paths to read after the standard agent files (soul, role, autonomy, actions, memory)
 - **Project Files** — paths to check for updates during Session End Protocol
@@ -256,7 +279,7 @@ The router parses the agent name, finds the agent directory under `agents/<name>
 Standard order after the agent directory is identified:
 
 1. Run `date` to establish current date, time, and day of week
-2. Read `agents/CONVENTIONS.md`
+2. Read `agents/CONVENTIONS.md`. If its frontmatter has `extends: <path>`, read that master file **first**, then the workspace file; the workspace file wins on conflict (see § Inheritance)
 3. Soul (`soul.md`)
 4. Name (`name.md`)
 5. Role (`role.md`)
@@ -270,6 +293,22 @@ Standard order after the agent directory is identified:
 13. Paths listed in `context.md` under `## Startup Context`
 14. Playbook index — glob `playbooks/*.md`, read only frontmatter and first paragraph of each (not full steps)
 15. Trigger check — evaluate each playbook's trigger against today's date, day of week, and session context. Flag any that should execute this session
+16. Drain the scheduled-run inbox — if `memory/scheduled/inbox.md` exists, read it. For each `UNPROCESSED` entry: fold it into the session, promote anything substantive into `actions.md` or a memory entry, then flip it to `PROCESSED`. Surface a one-line summary ("N ticks ran since we last spoke — …") in the priority declaration. Absent file = no-op. See § Session Types
+
+## Session Types
+
+Not every session is an interactive pairing with {{PRINCIPAL}}. Automated scheduler runs are a **different kind of session** and must not pollute — or be lost to — the agent's memory. Two types:
+
+| Type | Trigger | Context load | Writes |
+|------|---------|--------------|--------|
+| **Session** (interactive) | {{PRINCIPAL}} runs `/agent <name>` | Full startup sequence | Session memory, action tracker, commit |
+| **Tick** (automated) | A scheduler fires a due task | **Trimmed** — conventions, soul, name, role, autonomy, tools, actions, standing memory, the inbox, the specific task/playbook, `context.md` startup paths. **Not** the recent-2 session memories | The **inbox only** — never session memory, action tracker, or commit |
+
+**Why trimmed + inbox-only:** if ticks wrote session memories, a run of thin automated ticks between pairing sessions would flush the substantive interactive sessions out of the recent-2 startup window and rot the agent's context. So ticks stay out of `memory/sessions/` entirely. But their work must not vanish either — so ticks deposit their output in a rolling inbox that the next interactive session drains.
+
+**The scheduled-run inbox** (`memory/scheduled/inbox.md`): a rolling, append-only ledger. Ticks append `UNPROCESSED` entries. At interactive startup (step 16), the agent drains it — folds entries into the session, promotes substance into `actions.md` or a memory entry, then flips them to `PROCESSED`. Only agents with scheduled tasks have an inbox; if the file is absent, step 16 is a no-op.
+
+A scheduler is any unattended runner (cron, launchd, a cloud routine) that invokes `claude -p` against a task register. It must: cap each task with an autonomy ceiling, cap tool calls, never commit or push, never use the `/agent` router, and log every run. A reference implementation lives in the Mindvalley workspace under `agents/scheduler/` (`prompt.md`, `policies.md`, `scheduled-tasks.md`).
 
 ## Session Priority Declaration
 
@@ -407,6 +446,10 @@ resume: claude --resume ${CLAUDE_SESSION_ID}
 
 Contain: topics discussed, decisions made, open questions. Do NOT duplicate action items — reference `actions.md`.
 
+### memory/scheduled/
+
+Present only for agents with scheduled tasks. Holds `inbox.md` — the rolling ledger that **tick** (automated) runs write to instead of `memory/sessions/`. Drained at interactive startup (see § Session Types). Never enters the recent-2 window.
+
 ### Memory Entry Types
 
 Use these in the `type` frontmatter field:
@@ -418,11 +461,33 @@ Use these in the `type` frontmatter field:
 ### Baseline Consolidation
 
 When the agent has accumulated more than 5 standing entries or more than 10 session entries, consolidate:
-- Create a new baseline entry in `memory/standing/` that captures current project state
-- Archive old session entries (move to `memory/archive/` or delete if fully captured in the baseline)
-- Update MEMORY.md index
+- Create a new baseline entry in `memory/standing/` that captures **every** durable rule, decision, path, ID, and threshold from the existing standing entries (losing a rule is the failure mode; length is not)
+- Move the superseded standing entries to `memory/archive/standing/`
+- Keep the 10 most recent session entries; move the rest to `memory/archive/sessions/`
+- Write `memory/archive/INDEX.md` listing every archived file with its one-line summary
+- Rewrite MEMORY.md so Standing lists the baseline (plus anything genuinely new since) and Sessions lists the kept 10, one line each, ≤40 words
 
-This prevents context bloat while preserving institutional knowledge.
+Wiki-links resolve by filename, so moving files does not break `[[...]]` references.
+
+**Why this matters:** everything in `memory/standing/` and all of MEMORY.md is read at every startup. A 40-entry standing memory costs ~60k tokens before the agent says hello. Large data files (exports, scans, dumps) never belong in `memory/standing/` — put them under `work/` or `knowledge/` and leave a one-page summary that points to them.
+
+### Workspace Memory File Format
+
+Workspace-level memories (shared operational knowledge, distinct from agent memories) use this frontmatter:
+
+```yaml
+---
+title: <Description>
+type: memory
+category: operational | learning | personal
+scope: workspace | project
+tags: [<1-3 tags>]
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+---
+```
+
+**Naming:** lowercase hyphenated slugs. No date prefix — updated in place.
 
 When you discover operational knowledge worth persisting — a tool config, a workaround, a convention the user corrects you on — write it to your own `memory/standing/`.
 

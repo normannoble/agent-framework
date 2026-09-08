@@ -41,7 +41,7 @@ This is the foundation. Get it right before moving on.
 
 Ask the principal to describe:
 - **What does this agent do?** What's its primary job?
-- **Who does it report to and who decides?** (Usually {{PRINCIPAL}}, but confirm)
+- **Who does it report to and who decides?** (Usually the principal (named in `agents/CONVENTIONS.md` frontmatter `principal:` if present), but confirm)
 - **What outcomes is it accountable for?** What should measurably improve because this agent exists?
 - **Who are the key stakeholders?** People the agent needs to track, prepare for, or synthesize input from.
 - **What deliverables does it own?** Concrete artifacts it keeps progressing.
@@ -224,7 +224,7 @@ Once name, role, soul, and autonomy are confirmed, create the full agent structu
 
 8. **Update the workspace root `CLAUDE.md`** (single-domain) or **`<scope>/CLAUDE.md`** (multi-domain) — add the agent to the Agents table (name, role title)
 
-9. **Update `agents/CONVENTIONS.md`** — add the name to the Reserved list
+9. **Update `agents/CONVENTIONS.md`** — add the name to the `reserved:` frontmatter list (shared/extends mode) or to the **Reserved** line (copied mode)
 
 10. **Create initial baseline** at `<agent-dir>/memory/standing/<date>-baseline.md`:
    - Capture the current state of the project this agent is scoped to

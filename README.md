@@ -286,6 +286,20 @@ In your target repository:
 
 This walks you through 7 phases: scope, role definition, autonomy levels, soul/personality, naming, file creation, and verification. No files are created until phase 6 — the first five phases are pure design conversation.
 
+## Shared Install (one framework, many workspaces)
+
+If you run several workspaces, don't copy the skills and conventions into each one. Instead:
+
+1. Symlink the skills into your user-level skills folder so every project sees them:
+   ```bash
+   ln -s /path/to/agent-framework/skills/agent ~/.claude/skills/agent
+   ln -s /path/to/agent-framework/skills/create-agent ~/.claude/skills/create-agent
+   ```
+2. Keep `template/agents/CONVENTIONS.md` as the single master.
+3. In each workspace, make `agents/CONVENTIONS.md` a short file whose frontmatter says `extends: /path/to/agent-framework/template/agents/CONVENTIONS.md` plus `principal`, `naming`, `naming-examples`, and `reserved`. Put only workspace-specific rules below the frontmatter. The workspace file wins on conflict.
+
+The router reads the master first, then the workspace file. One fix in the master reaches every workspace. See the **Inheritance** section at the top of `template/agents/CONVENTIONS.md`.
+
 ## Customisation
 
 ### Tool Permissions
