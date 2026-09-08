@@ -69,7 +69,7 @@ Persistent AI collaborators with calibrated autonomy. See `agents/CONVENTIONS.md
 |------|------|
 | *(run `/agents:new` to add the first one)* | |
 
-Start one with `/agents:start <name>`. List with `/agents:start list`.
+Start one with `/agents:start <name>`. List with `/agents:list`. Board: `/agents:status`. One move: `/agents:next`.
 ```
 
 ## 4. Confirm

@@ -30,13 +30,16 @@ claude plugin marketplace add normannoble/agent-framework
 claude plugin install agents@normannoble
 ```
 
-This gives every project three skills:
+This gives every project these skills:
 
 | Skill | What it does |
 |-------|--------------|
 | `/agents:init` | Set up the current repo as a workspace (run once) |
 | `/agents:new` | Design and create an agent |
-| `/agents:start <name>` | Run an agent. Also `list`, `status`, `next` |
+| `/agents:start <name>` | Run an agent (`<name> <topic>` to work on something, `<name> close` to end) |
+| `/agents:list` | List agents (`<scope>` to filter, `all` to include retired) |
+| `/agents:status` | Live org status board |
+| `/agents:next` | The single next best action across the org |
 
 Then, in the repo where you want agents:
 
@@ -54,7 +57,7 @@ claude plugin marketplace update normannoble && claude plugin update agents@norm
 
 ### Install by copying (the installer)
 
-If you would rather have every file inside your repo, with short `/agents:start` and `/agents:new` commands:
+If you would rather have every file inside your repo, with the same `/agents:*` commands:
 
 ```bash
 curl -fsSL https://agent-framework.sh/install.sh | sh
@@ -165,10 +168,11 @@ The framework installs two layers of conventions and the runtime skills:
 ### Runtime Skills
 
 - **`skills/start/SKILL.md`** — Router skill that activates agents (`/agents:start <name>`)
+- **`skills/list/SKILL.md`**, **`skills/status/SKILL.md`**, **`skills/next/SKILL.md`** — Org views (`/agents:list`, `/agents:status`, `/agents:next`)
 - **`skills/new/SKILL.md`** — Builder skill for interactive agent creation (`/agents:new`)
 - **`skills/init/SKILL.md`** — Workspace setup (`/agents:init`; marketplace plugin only — the installer does this job in copied mode)
 
-In plugin mode the skills come from the plugin and are namespaced (`/agents:start`, `/agents:new`, `/agents:init`). In copied mode the installer writes a small in-repo plugin at `.claude/skills/agents/` (manifest plus the `start` and `new` skills). Claude Code loads it as `agents@skills-dir` once the folder is trusted, so the commands are the same `/agents:start` and `/agents:new`. Browsing copies are synced to `agents/skills/`. Do not also install the marketplace plugin in that repo, or both will answer to the same names.
+In plugin mode the skills come from the plugin and are namespaced (`/agents:start`, `/agents:list`, `/agents:status`, `/agents:next`, `/agents:new`, `/agents:init`). In copied mode the installer writes a small in-repo plugin at `.claude/skills/agents/` (manifest plus the `start`, `list`, `status`, `next`, and `new` skills). Claude Code loads it as `agents@skills-dir` once the folder is trusted, so the commands are the same. Browsing copies are synced to `agents/skills/`. Do not also install the marketplace plugin in that repo, or both will answer to the same names.
 
 The master conventions load a lean core at every agent start. Long procedures (session end, memory consolidation, tooling admin, playbook format, and so on) live in `template/agents/reference/` and are read only when needed.
 
@@ -301,6 +305,9 @@ your-repo/
             ├── .claude-plugin/plugin.json
             └── skills/
                 ├── start/SKILL.md
+                ├── list/SKILL.md
+                ├── status/SKILL.md
+                ├── next/SKILL.md
                 └── new/SKILL.md
 ```
 
@@ -345,7 +352,7 @@ Then restart Claude Code. The Go installer has its own release flow (below); a p
 
 ## Developing the framework without the plugin (symlinks)
 
-To see edits instantly without a release, symlink the checkout itself into your user skills folder. The repo root already has the plugin layout, so it loads as `agents@skills-dir` with the same `/agents:start`, `/agents:new`, `/agents:init` commands:
+To see edits instantly without a release, symlink the checkout itself into your user skills folder. The repo root already has the plugin layout, so it loads as `agents@skills-dir` with the same `/agents:*` commands:
 
 ```bash
 ln -s /path/to/agent-framework ~/.claude/skills/agents

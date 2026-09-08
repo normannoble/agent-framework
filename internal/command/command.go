@@ -149,8 +149,8 @@ func newInitCommand() *cobra.Command {
 
 	cmd.Flags().StringVar(&flags.principal, "principal", "", "Name of the person directing the agents.")
 	cmd.Flags().StringVar(&flags.naming, "naming", "", "Agent naming tradition (roman, norse, or hellenic).")
-	cmd.Flags().BoolVar(&flags.skills, "skills", false, "Install the /agents:start and /agents:new skills.")
-	cmd.Flags().BoolVar(&flags.noSkills, "no-skills", false, "Do not install the /agents:start and /agents:new skills.")
+	cmd.Flags().BoolVar(&flags.skills, "skills", false, "Install the /agents:* skills (start, list, status, next, new).")
+	cmd.Flags().BoolVar(&flags.noSkills, "no-skills", false, "Do not install the /agents:* skills.")
 	cmd.Flags().BoolVar(&flags.workspace, "workspace", false, "Create the standard workspace directories.")
 	cmd.Flags().BoolVar(&flags.noWorkspace, "no-workspace", false, "Do not create the standard workspace directories.")
 	cmd.Flags().BoolVar(&flags.claude, "claude", false, "Add or update the managed CLAUDE.md agents section.")

@@ -144,9 +144,9 @@ When {{PRINCIPAL}} asks you to review or clean up your tracker, read `reference/
 
 ### context.md
 
-Frontmatter carries `scope` and `title`. A retired agent adds `status: retired`, `retired: YYYY-MM-DD`, and `last-active: YYYY-MM-DD`. Retired agents keep their files (history has value) but are hidden from `/agents:start list`, `/agents:start status`, and `/agents:start next` unless `all` is passed. Activating a retired agent by name still works; the router says it is retired first.
+Frontmatter carries `scope` and `title`. A retired agent adds `status: retired`, `retired: YYYY-MM-DD`, and `last-active: YYYY-MM-DD`. Retired agents keep their files (history has value) but are hidden from `/agents:list`, `/agents:status`, and `/agents:next` unless `all` is passed. Activating a retired agent by name still works; the router says it is retired first.
 
-Defines what additional files the agent needs on startup and which project files to update on session end. Frontmatter includes `scope` and `title` (used by `/agents:start list`). Body has two sections:
+Defines what additional files the agent needs on startup and which project files to update on session end. Frontmatter includes `scope` and `title` (used by `/agents:list`). Body has two sections:
 - **Startup Context** — paths to read after the standard agent files (soul, role, autonomy, actions, memory)
 - **Project Files** — paths to check for updates during Session End Protocol
 
@@ -221,8 +221,9 @@ All agents are invoked through the `/agents:start` router (from the `agents` plu
 /agents:start <name>          — activate an agent (status check)
 /agents:start <name> <topic>  — activate and work on a topic
 /agents:start <name> close    — end session and save state
-/agents:start list            — list all agents
-/agents:start list <scope>    — list agents in a scope
+/agents:list [scope|all]      — list agents
+/agents:status [scope]        — live org status board
+/agents:next [scope]          — the single next best action
 ```
 
 The router parses the agent name, finds the agent directory under `agents/<name>/`, executes the startup sequence, and becomes that agent for the session. Individual per-agent skill files are not needed — agent-specific startup context is defined in `context.md`.
