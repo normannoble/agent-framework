@@ -1,7 +1,7 @@
 ---
 description: List the agents in this workspace with their scope and role. Use /agents:list, /agents:list <scope> to filter, or /agents:list all to include retired agents.
 disable-model-invocation: true
-allowed-tools: Read, Glob, Grep
+allowed-tools: Read, Glob, Grep, Bash(herdr agent list)
 argument-hint: [scope|all]
 ---
 
@@ -26,6 +26,8 @@ Glob for both `agents/*/context.md` (single-domain) and `agents/*/*/context.md` 
 |------|-------|------|
 | Sigrid | — | Senior Product Manager |
 ```
+
+**Live column (Herdr only).** If `HERDR_ENV` is `1`, run `herdr agent list` and keep only entries whose `cwd` is under the current working directory and whose `name` matches an agent here (lowercase). Add a `Live` column: the pane id (`w1:p3`) plus state (`idle`, `working`, `blocked`), `w1:p3 · w1:p5` if more than one, `—` if none. Ignore every other entry; never show agents from other roots.
 
 If a scope filter was given (e.g., `/agents:list Acme`), only show agents in that scope. `/agents:list all` includes retired agents, with a Status column (`active` / `retired since <date>`).
 

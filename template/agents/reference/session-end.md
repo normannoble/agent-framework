@@ -43,6 +43,7 @@ date: YYYY-MM-DD
 type: session
 session_id: ${CLAUDE_SESSION_ID}
 resume: claude --resume ${CLAUDE_SESSION_ID}
+herdr_pane: ${HERDR_PANE_ID}   # omit the line outside Herdr
 ---
 ```
 Include topics discussed, decisions made, and open questions. Do NOT duplicate action items — reference `actions.md`.

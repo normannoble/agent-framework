@@ -1,7 +1,7 @@
 ---
 description: Health review of the agent workspace — startup cost per agent, tracker hygiene, memory bloat, staleness, missing files, conventions drift. Reports findings by severity and recommends the exact next commands. Read-only. Use /agents:doctor or /agents:doctor <name>.
 disable-model-invocation: true
-allowed-tools: Read, Glob, Grep, Bash(date), Bash(wc), Bash(ls), Bash(git status), Bash(git log)
+allowed-tools: Read, Glob, Grep, Bash(date), Bash(wc), Bash(ls), Bash(git status), Bash(git log), Bash(herdr agent list)
 argument-hint: [name|scope|all]
 ---
 
@@ -60,6 +60,7 @@ Always name the **single biggest file** and its share. That is the fix.
 - ❌ any of these missing: `role.md`, `soul.md`, `name.md`, `autonomy.md`, `tools.md`, `actions.md`, `context.md`, `MEMORY.md`, `memory/standing/`, `memory/sessions/`.
 - ❌ a path under `## Startup Context` in `context.md` that does not exist.
 - ⚠️ `memory/scheduled/inbox.md` exists and has `UNPROCESSED` entries (count them).
+- ⚠️ `peer/` has more than 10 files, or any file with `status: open` older than 7 days (a peer request nobody answered).
 - ⚠️ a playbook (`playbooks/*.md`) has no `## Trigger` section. ℹ️ `playbooks/` is empty (normal for a new agent; mention once, no fix needed).
 - ℹ️ active agent whose `Last reviewed` is > 60 days old: suggest retiring it (`status: retired` in `context.md`).
 
@@ -70,6 +71,7 @@ Always name the **single biggest file** and its share. That is the fix.
 - ⚠️ `agents/tools/INDEX.md` missing.
 - ⚠️ `CLAUDE.md` `## Agents` table lists an agent that is retired or missing, or omits an active one.
 - ℹ️ `git status --short agents/` shows uncommitted changes (list the count only).
+- ❌ (Herdr only, `HERDR_ENV` is `1`) `herdr agent list` shows the same agent name live in two or more panes whose `cwd` is under this root — two sessions share one tracker. Name the panes. Ignore other roots.
 
 ## Output
 

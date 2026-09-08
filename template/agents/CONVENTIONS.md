@@ -27,6 +27,7 @@ Long procedures live beside this file in `reference/`. In plugin mode that is `$
 | `autonomy-format.md` | Creating an agent or restructuring `autonomy.md` |
 | `tracker-cleanup.md` | Asked to clean up the action tracker |
 | `index-maintenance.md` | Updating an INDEX.md at session end |
+| `peer.md` | Asking another agent for something (`/agents:ask`), running as a peer session, or anything Herdr |
 
 ---
 
@@ -63,7 +64,9 @@ agents/<agent-name>/
 ├── MEMORY.md            # Memory index — standing and session sections
 ├── memory/
 │   ├── standing/        # Durable rules, decisions, baselines
-│   └── sessions/        # Per-session logs
+│   ├── sessions/        # Per-session logs
+│   └── scheduled/       # Scheduler inbox (only agents with scheduled tasks)
+├── peer/                # Agent-to-agent exchanges (created on demand by /agents:ask)
 └── playbooks/           # Repeatable procedures with defined execution modes
 ```
 
@@ -234,6 +237,7 @@ All agents are invoked through the `/agents:start` router (from the `agents` plu
 /agents:next [scope]          — the single next best action
 /agents:doctor [name]         — health review, recommends fixes
 /agents:help [command]        — the guide
+/agents:ask <name> "<request>" — ask a peer agent (Herdr only)
 ```
 
 The router parses the agent name, finds the agent directory under `agents/<name>/`, executes the startup sequence, and becomes that agent for the session. Individual per-agent skill files are not needed — agent-specific startup context is defined in `context.md`.
@@ -261,18 +265,23 @@ Standard order after the agent directory is identified:
 
 ## Session Types
 
-Not every session is an interactive pairing with {{PRINCIPAL}}. Automated scheduler runs are a **different kind of session** and must not pollute — or be lost to — the agent's memory. Two types:
+Not every session is an interactive pairing with {{PRINCIPAL}}. Automated scheduler runs and requests from other agents are **different kinds of session** and must not pollute — or be lost to — the agent's memory. Three types:
 
 | Type | Trigger | Context load | Writes |
 |------|---------|--------------|--------|
 | **Session** (interactive) | {{PRINCIPAL}} runs `/agents:start <name>` | Full startup sequence | Session memory, action tracker, commit |
 | **Tick** (automated) | A scheduler fires a due task | **Trimmed** — conventions, soul, name, role, autonomy, tools, actions, standing memory, the inbox, the specific task/playbook, `context.md` startup paths. **Not** the recent-2 session memories | The **inbox only** — never session memory, action tracker, or commit |
+| **Peer** (agent-to-agent) | Another agent in the same workspace runs `/agents:ask` | **Trimmed** like a tick, plus the request file. Runs in a fresh Herdr pane that closes when the reply is written | The **reply section of one file in `peer/`** only. Ceiling L3. See `reference/peer.md` |
 
 **Why trimmed + inbox-only:** if ticks wrote session memories, a run of thin automated ticks between pairing sessions would flush the substantive interactive sessions out of the recent-2 startup window and rot the agent's context. So ticks stay out of `memory/sessions/` entirely. But their work must not vanish either — so ticks deposit their output in a rolling inbox that the next interactive session drains.
 
 **The scheduled-run inbox** (`memory/scheduled/inbox.md`): a rolling, append-only ledger. Ticks append `UNPROCESSED` entries. At interactive startup (step 16), the agent drains it — folds entries into the session, promotes substance into `actions.md` or a memory entry, then flips them to `PROCESSED`. Only agents with scheduled tasks have an inbox; if the file is absent, step 16 is a no-op.
 
 A scheduler is any unattended runner (cron, launchd, a cloud routine) that invokes `claude -p` against a task register. It must: cap each task with an autonomy ceiling, cap tool calls, never commit or push, never use the `/agents:start` router, and log every run. The shared implementation ships with the plugin under `${CLAUDE_PLUGIN_ROOT}/template/agents/scheduler/`: `tick.sh` (entrypoint; sources nvm, runs the gate, starts Claude only when something is due), `gate.py` (parses the register, applies the catch-up rule), `prompt.md`, `policies.md`, a `scheduled-tasks.md` register template, `install-launchd.sh` (macOS) and `setup.sh` (cron). `/agents:init` copies it into `agents/scheduler/` and creates the register; `/agents:schedule` manages tasks and installs the timer. Ticks read the workspace copy, so re-run `/agents:init` (backfill) after a plugin update that changes it.
+
+## Herdr
+
+When the session runs inside [Herdr](https://herdr.dev) (`HERDR_ENV=1`), the router tags the pane with the agent's name and labels it `<Name> - <Role title>` (`<Name> - Peer` for peer sessions), so every live agent is visible by name in the Herdr sidebar and to `/agents:list`, `/agents:status`, and `/agents:doctor`. **Scope is the repo root**, not the Herdr workspace: agents see only live agents whose working directory is under the same root. `/agents:ask <name> "<request>"` is the only sanctioned way for one agent to engage another. Full protocol: `reference/peer.md`.
 
 ## Session Priority Declaration
 

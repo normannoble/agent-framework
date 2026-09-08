@@ -128,6 +128,7 @@ Once name, role, soul, and autonomy are confirmed, create the full agent structu
    ├── memory/
    │   ├── standing/
    │   └── sessions/
+   ├── peer/            # created on demand by /agents:ask; may be omitted here
    └── playbooks/
    ```
 

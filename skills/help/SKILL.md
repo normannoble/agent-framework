@@ -2,7 +2,7 @@
 description: How the agents plugin works — the commands, the flow from setup to daily use, what an agent is made of, and fixes for common problems. Use /agents:help, or /agents:help <command> for one command.
 disable-model-invocation: true
 allowed-tools: Read, Glob
-argument-hint: [start|list|status|next|doctor|schedule|new|init]
+argument-hint: [start|list|status|next|doctor|schedule|ask|new|init]
 ---
 
 # /agents:help — Guide
@@ -30,6 +30,7 @@ An **agent** is a named, persistent collaborator that lives in this repo as mark
 | `/agents:status` | Live board: each agent's role, current focus, and freshness. |
 | `/agents:next` | The single next best action across all agents, and why. |
 | `/agents:doctor` | Health review. Finds bloat, stale trackers, missing files. Recommends fixes. Changes nothing. |
+| `/agents:ask <name> "<request>"` | Ask another agent in this workspace. Opens a pane, runs it as a peer, reads its written reply, closes the pane. Herdr only. |
 | `/agents:schedule` | Unattended tasks. `add`, `list`, `remove <id>`, `enable`/`disable <id>`, `status`, `install` (the hourly timer). |
 | `/agents:help <command>` | Details for one command. |
 
@@ -39,7 +40,8 @@ An **agent** is a named, persistent collaborator that lives in this repo as mark
 2. **Each working session:** `/agents:start <name>` (or with a topic). Do the work. `/agents:start <name> close` when done.
 3. **When you do not know where to go:** `/agents:status` for the whole board, `/agents:next` for the one move.
 4. **Once a week or so:** `/agents:doctor`. Run the commands it gives you.
-5. **For work that should happen without you:** `/agents:schedule add`, then `/agents:schedule install` once. A timer checks every hour and runs Claude only when a task is due. Results land in the agent's inbox and surface at its next start.
+5. **When one agent needs another:** `/agents:ask <name> "<request>"` from inside the asking agent's session. Same workspace only. The reply lands in `agents/<Name>/peer/`.
+6. **For work that should happen without you:** `/agents:schedule add`, then `/agents:schedule install` once. A timer checks every hour and runs Claude only when a task is due. Results land in the agent's inbox and surface at its next start.
 
 Always run these from the workspace root (the folder that holds `agents/`).
 
@@ -55,6 +57,7 @@ agents/<Name>/
   context.md     scope, title, extra files to read at startup
   MEMORY.md      index of its memory
   memory/        standing/ (durable) and sessions/ (one per session)
+  peer/          replies to /agents:ask requests
   playbooks/     repeatable procedures with triggers
 ```
 

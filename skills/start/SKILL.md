@@ -1,8 +1,8 @@
 ---
-description: Start a workspace agent by name and become it for the session. Use /agents:start <name>, /agents:start <name> <topic>, or /agents:start <name> close. To list agents use /agents:list; for the org board /agents:status; for the one next move /agents:next.
+description: Start a workspace agent by name and become it for the session. Use /agents:start <name>, /agents:start <name> <topic>, /agents:start <name> close, or /agents:start <name> peer <file> (peer session, used by /agents:ask). To list agents use /agents:list; for the org board /agents:status; for the one next move /agents:next.
 disable-model-invocation: true
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash(date), Bash(ls), AskUserQuestion
-argument-hint: <name> [topic | close]
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash(date), Bash(ls), Bash(herdr agent rename), Bash(herdr pane rename), Bash(herdr agent list), AskUserQuestion
+argument-hint: <name> [topic | close | peer <file>]
 ---
 
 # /agents:start — Agent Router
@@ -26,7 +26,7 @@ To detect: glob for both `agents/*/context.md` and `agents/*/*/context.md`. Use 
 
 Parse `$ARGUMENTS` and route:
 
-### `list`, `status`, `next`, `doctor`, `schedule`, or `help` as the first word
+### `list`, `status`, `next`, `doctor`, `schedule`, `ask`, or `help` as the first word
 
 These moved to their own commands. Say so in one line — e.g. "`/agents:start list` is now `/agents:list`" — then read `${CLAUDE_PLUGIN_ROOT}/skills/<word>/SKILL.md` (if the variable is empty, glob `~/.claude/plugins/cache/*/agents/*/skills/<word>/SKILL.md` and take the highest version; in copied mode it is `.claude/skills/agents/skills/<word>/SKILL.md`) and follow it with the remaining arguments.
 
@@ -35,6 +35,7 @@ These moved to their own commands. Say so in one line — e.g. "`/agents:start l
 2. If not found, say so and suggest `/agents:list`
 3. If found, execute the **Agent Startup Sequence** below
 4. After startup, handle the remaining arguments as the agent would:
+   - If remaining args are `peer <file>` → this is a **peer session** (see below). Do not run the full startup; run the trimmed one
    - If remaining args are `close` or `end` or `wrap up` → execute **Session End Protocol** (defined in `agents/CONVENTIONS.md` § Session End Protocol)
    - If no remaining args → execute **Session Priority Declaration** (defined in `agents/CONVENTIONS.md` § Session Priority Declaration)
    - If remaining args contain a topic → address it directly
@@ -45,6 +46,7 @@ Show a brief help message:
 /agents:start <name>          — activate an agent
 /agents:start <name> <topic>  — activate and work on a topic
 /agents:start <name> close    — end the session and save state
+/agents:ask <name> "<request>"  — ask a peer agent (Herdr only)
 /agents:list                  — list all agents (add <scope> or all)
 /agents:status                — live status board (add <scope>)
 /agents:next                  — the single next best action (add <scope>)
@@ -59,6 +61,7 @@ Show a brief help message:
 Once the agent directory is identified (e.g., `agents/Sigrid/` or `agents/Acme/Sigrid/`):
 
 1. Run `date` to establish the current date, time, and day of week
+   - **Herdr** (`HERDR_ENV` is `1`): read `title:` from the agent's `context.md`, then run `herdr agent rename "$HERDR_PANE_ID" <name lowercased>` and `herdr pane rename "$HERDR_PANE_ID" "<Name> - <title>"`. Ignore errors (e.g. the name is taken by another live pane — then use `<name>-2` and mention it once). Outside Herdr skip this line
 2. Read `agents/CONVENTIONS.md` (master first if it `extends` one — see Conventions inheritance above)
 3. Read `soul.md`
 4. Read `name.md`
@@ -74,9 +77,14 @@ Once the agent directory is identified (e.g., `agents/Sigrid/` or `agents/Acme/S
 14. Playbook index — glob `playbooks/*.md`, read only frontmatter and first paragraph of each (not full steps)
 15. Trigger check — evaluate each playbook's trigger against today's date, day of week, and session context. Flag any that should execute this session
 16. Drain the scheduled-run inbox — if `memory/scheduled/inbox.md` exists, read it. For each `UNPROCESSED` entry: fold it into the session, promote anything substantive into `actions.md` or a memory entry, then flip it to `PROCESSED`. Surface a one-line summary ("N ticks ran since we last spoke — …") in the session priority declaration. Absent file = no-op. See `agents/CONVENTIONS.md` § Session Types
-17. Hygiene check — from what you just read, note: number of files in `memory/standing/` (limit 5), number of files in `memory/sessions/` (limit 10), size of `actions.md` (limit 20 KB), and whether the `Last reviewed:` line is longer than one short line. If any limit is broken, print **one line** before the priority declaration, e.g. `⚠️ Hygiene: standing memory has 9 files (limit 5) — run /agents:doctor <name>, then /agents:start <name> consolidate memory.` If all pass, say nothing.
+17. Peer glance — if `peer/` exists, list files with `status: open` or `status: answered`. Mention them in one line in the priority declaration ("2 peer replies since last session"); read only what the session needs. Do not drain them into the tracker unless the principal says so. Absent folder = no-op
+18. Hygiene check — from what you just read, note: number of files in `memory/standing/` (limit 5), number of files in `memory/sessions/` (limit 10), size of `actions.md` (limit 20 KB), and whether the `Last reviewed:` line is longer than one short line. If any limit is broken, print **one line** before the priority declaration, e.g. `⚠️ Hygiene: standing memory has 9 files (limit 5) — run /agents:doctor <name>, then /agents:start <name> consolidate memory.` If all pass, say nothing.
 
 All paths are relative to the agent directory unless prefixed with `agents/` or the workspace root.
+
+## Peer Session (`/agents:start <name> peer <file>`)
+
+Another agent asked for something. You are not in a conversation with the principal. Load the **trimmed** context: steps 1–11 and 13 above (skip the recent-2 session memories, the playbook trigger check, the inbox drain, the peer glance, and the hygiene check). Then read `${CLAUDE_PLUGIN_ROOT}/template/agents/reference/peer.md` § Three session types and follow it: read the request file, answer in its `## Reply` section at ceiling **L3**, set `status:` to `answered` (or `needs-principal` if anything exceeded L3, listing it under `Needs <principal>:`). Write nothing else: no session memory, no tracker edit, no commit, no email or messages. When the file is written, say `Reply written: <path>` and stop. The caller closes this pane.
 
 After loading, **you are that agent for the rest of this session.** Adopt the soul, follow the role's working mode, respect the scope boundaries, and follow the conventions from `agents/CONVENTIONS.md`. You are not the router anymore — you are the agent.
 
