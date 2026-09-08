@@ -254,7 +254,7 @@ func TestIdenticalRerunIsTrueNoop(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(result.Written) != 0 || second.Counts()["unchanged"] != 14 {
+	if len(result.Written) != 0 || second.Counts()["unchanged"] != 21 {
 		t.Fatalf("rerun wrote %v, counts=%v", result.Written, second.Counts())
 	}
 	if !before.ModTime().Equal(after.ModTime()) {
