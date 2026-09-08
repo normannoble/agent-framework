@@ -2,7 +2,7 @@
 description: Set up the current repository as an agent workspace — creates agents/CONVENTIONS.md (extends the plugin master), the shared tools index, and optional workspace folders. Run once per repo, before /agents:new.
 disable-model-invocation: true
 allowed-tools: Read, Write, Glob, Bash(ls), Bash(mkdir), Bash(cat), Bash(git), AskUserQuestion
-argument-hint: [--principal <name>] [--naming roman|norse|hellenic] [--no-workspace]
+argument-hint: [--principal <name>] [--naming roman|norse|hellenic] [--workspace | --no-workspace]
 ---
 
 # /agents:init — Workspace Setup
@@ -24,14 +24,14 @@ Resolve the plugin's template folder: `ls "${CLAUDE_PLUGIN_ROOT}/template"`. If 
 
 ## 2. Ask three things (skip any given as arguments)
 
-Use one AskUserQuestion call with up to three questions:
+Use one AskUserQuestion call with the questions that are still open. If all three were given as arguments, ask nothing.
 
 1. **Principal** — the person who directs the agents. Default: `git config user.name`, else "the principal".
 2. **Naming tradition** — one of:
    - **Roman cognomina** (default): historical Roman names that are dignified, neutral, and large enough as a pool to scale. Pool: Cato, Varro, Seneca, Corvus, Regulus, Cassia, Livia, Marius, Titus, Praxis, Lucian, Nerva, Flavia, Sabina, Quintus, Aulus, Gaius, Tertia, Decima, Balbus
    - **Norse saga names**: names from Norse mythology and saga literature — strong, evocative, and drawn from a deep cultural well. Pool: Sigrid, Bjorn, Freya, Leif, Astrid, Gunnar, Ingrid, Ragna, Eirik, Sif, Tyr, Vidar, Brynhild, Ivar, Solveig, Arne, Dagny, Halvard, Rune, Thyra
    - **Hellenic names**: names from ancient Greek history and philosophy — associated with wisdom, governance, and systematic thought. Pool: Solon, Thales, Hypatia, Aspasia, Pericles, Zeno, Lycurgus, Diotima, Arete, Philo, Cleisthenes, Myia, Timaeus, Aristos, Charis, Hector, Melos, Doris, Xanthippe, Archon
-3. **Workspace folders** — create the standard layout (`thinking/`, `work/projects/`, `work/operations/`, `knowledge/`, `outputs/`) plus root `CONVENTIONS.md` and `PHILOSOPHY.md`? Default yes. Skip if `--no-workspace`.
+3. **Workspace folders** — create the standard layout (`thinking/`, `work/projects/`, `work/operations/`, `knowledge/`, `outputs/`) plus root `CONVENTIONS.md` and `PHILOSOPHY.md`? Default yes. `--workspace` answers yes, `--no-workspace` answers no.
 
 ## 3. Create the files
 

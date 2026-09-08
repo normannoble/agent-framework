@@ -296,10 +296,10 @@ your-repo/
 │       │   └── sessions/
 │       └── playbooks/
 └── .claude/
-    └── skills/             # Project-scoped skills (source of truth)
-        ├── agent/
+    └── skills/             # Copied mode only (plugin mode has none here)
+        ├── start/
         │   └── SKILL.md
-        └── create-agent/
+        └── new/
             └── SKILL.md
 ```
 
