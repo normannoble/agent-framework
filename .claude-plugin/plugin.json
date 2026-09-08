@@ -1,6 +1,6 @@
 {
   "name": "agents",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Persistent AI collaboration partners in Claude Code \u2014 named agents with calibrated autonomy, memory, action trackers, and playbooks. Skills: /agents:start (run an agent), /agents:new (build one), /agents:init (set up a workspace).",
   "author": {
     "name": "Norman Noble",
