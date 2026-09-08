@@ -34,6 +34,7 @@ This gives every project these skills:
 
 | Skill | What it does |
 |-------|--------------|
+| `/agents:help` | The guide: commands, the flow, what an agent is, common fixes |
 | `/agents:init` | Set up the current repo as a workspace (run once) |
 | `/agents:new` | Design and create an agent |
 | `/agents:start <name>` | Run an agent (`<name> <topic>` to work on something, `<name> close` to end) |
@@ -170,11 +171,12 @@ The framework installs two layers of conventions and the runtime skills:
 
 - **`skills/start/SKILL.md`** — Router skill that activates agents (`/agents:start <name>`)
 - **`skills/list/SKILL.md`**, **`skills/status/SKILL.md`**, **`skills/next/SKILL.md`** — Org views (`/agents:list`, `/agents:status`, `/agents:next`)
+- **`skills/help/SKILL.md`** — In-product guide (`/agents:help`)
 - **`skills/doctor/SKILL.md`** — Health review (`/agents:doctor`); thresholds mirror the master conventions
 - **`skills/new/SKILL.md`** — Builder skill for interactive agent creation (`/agents:new`)
 - **`skills/init/SKILL.md`** — Workspace setup (`/agents:init`; marketplace plugin only — the installer does this job in copied mode)
 
-In plugin mode the skills come from the plugin and are namespaced (`/agents:start`, `/agents:list`, `/agents:status`, `/agents:next`, `/agents:doctor`, `/agents:new`, `/agents:init`). In copied mode the installer writes a small in-repo plugin at `.claude/skills/agents/` (manifest plus the `start`, `list`, `status`, `next`, `doctor`, and `new` skills). Claude Code loads it as `agents@skills-dir` once the folder is trusted, so the commands are the same. Browsing copies are synced to `agents/skills/`. Do not also install the marketplace plugin in that repo, or both will answer to the same names.
+In plugin mode the skills come from the plugin and are namespaced (`/agents:help`, `/agents:start`, `/agents:list`, `/agents:status`, `/agents:next`, `/agents:doctor`, `/agents:new`, `/agents:init`). In copied mode the installer writes a small in-repo plugin at `.claude/skills/agents/` (manifest plus the `help`, `start`, `list`, `status`, `next`, `doctor`, and `new` skills). Claude Code loads it as `agents@skills-dir` once the folder is trusted, so the commands are the same. Browsing copies are synced to `agents/skills/`. Do not also install the marketplace plugin in that repo, or both will answer to the same names.
 
 The master conventions load a lean core at every agent start. Long procedures (session end, memory consolidation, tooling admin, playbook format, and so on) live in `template/agents/reference/` and are read only when needed.
 
@@ -306,6 +308,7 @@ your-repo/
         └── agents/         # Copied mode only: an in-repo plugin (agents@skills-dir)
             ├── .claude-plugin/plugin.json
             └── skills/
+                ├── help/SKILL.md
                 ├── start/SKILL.md
                 ├── list/SKILL.md
                 ├── status/SKILL.md

@@ -79,6 +79,7 @@ Show a short table of what was created and what was skipped because it existed. 
 ```
 Next: /agents:new   — design and create your first agent
 Then: /agents:start <name>
+Guide: /agents:help
 ```
 
 Do not create any agent here. Do not commit.
