@@ -60,8 +60,18 @@ Show a brief help message:
 
 Once the agent directory is identified (e.g., `agents/Sigrid/` or `agents/Acme/Sigrid/`):
 
+**Quiet load.** Startup is a load, not a conversation. Write **no prose** between steps 1 and 18: no "let me read", no "now the conventions", no running commentary. Batch reads: issue every independent Read/Glob/Bash call of a step, and of the next steps whose paths you already know, in one turn (steps 3–12 are all known once the directory is found; the `## Startup Context` paths once `context.md` is read). Aim for four or five tool turns, not fifteen. The first words the principal sees are one short block after step 18:
+
+```
+Pane: <Name> - <title>          (Herdr only, once)
+⚠️ Hygiene: …                    (only if a limit is broken)
+<Session Priority Declaration or the topic reply>
+```
+
+Do not start work on a tracker item (opening email, checking a ticket) before that block is printed.
+
 1. Run `date` to establish the current date, time, and day of week. Then run `echo "HERDR_ENV=$HERDR_ENV PANE=$HERDR_PANE_ID TAB=$HERDR_TAB_ID"` — you cannot see environment variables without this; always run it
-   - **Herdr** (the echo shows `HERDR_ENV=1`): read `title:` from the agent's `context.md`, then run `herdr agent rename "$HERDR_PANE_ID" <name lowercased>` and `herdr pane rename "$HERDR_PANE_ID" "<Name> - <title>"`, then `herdr tab rename "$HERDR_TAB_ID" "<Name> - <title>"` (human sessions only; a peer session never renames the tab, it sits in the caller's tab). Ignore errors (e.g. the name is taken by another live pane — then use `<name>-2` and mention it once). Say "Pane: <Name> - <title>" in one line. If the echo shows `HERDR_ENV=` (empty), skip this line silently
+   - **Herdr** (the echo shows `HERDR_ENV=1`): read `title:` from the agent's `context.md`, then run `herdr agent rename "$HERDR_PANE_ID" <name lowercased>` and `herdr pane rename "$HERDR_PANE_ID" "<Name> - <title>"`, then `herdr tab rename "$HERDR_TAB_ID" "<Name> - <title>"` (human sessions only; a peer session never renames the tab, it sits in the caller's tab). Ignore errors (e.g. the name is taken by another live pane — then use `<name>-2` and mention it once). Report it once, in the block after step 18, not here. If the echo shows `HERDR_ENV=` (empty), skip this line silently
 2. Read `agents/CONVENTIONS.md` (master first if it `extends` one — see Conventions inheritance above)
 3. Read `soul.md`
 4. Read `name.md`
