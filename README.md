@@ -260,6 +260,26 @@ Every session follows a pattern:
 
 Session focus prevents recency bias — the agent won't silently let conversation momentum displace declared priorities.
 
+Startup is quiet: the agent batches its reads and says nothing until the load is done, then prints one block (pane label, any hygiene warning, the priority declaration).
+
+### Three Session Types
+
+| Type | Who starts it | Context | May write |
+|------|---------------|---------|-----------|
+| **Session** | You, with `/agents:start` | Full | Memory, tracker, commits |
+| **Tick** | The scheduler timer | Trimmed | `memory/scheduled/inbox.md` only |
+| **Peer** | Another agent, with `/agents:ask` | Trimmed plus the request file | The reply section of one file in `peer/` |
+
+Ticks and peer sessions never commit, never send anything, and stay at autonomy L3. A human session drains the inbox and glances at `peer/` at its next start.
+
+### Scheduler
+
+`/agents:init` copies `agents/scheduler/` and a task register `agents/scheduled-tasks.md` into the workspace. `/agents:schedule add` writes a task (agent, cron-style time, mode, instructions); `/agents:schedule install` starts an hourly launchd (macOS) or cron timer. Each hour `tick.sh` runs a gate that checks the register and starts Claude only when a task is due, so an idle hour costs nothing. Results land in the agent's inbox.
+
+### Herdr
+
+Inside [Herdr](https://herdr.dev) (`HERDR_ENV=1`) the agent names its pane and tab `<Name> - <Role>`, so the sidebar shows who is live. Scope is the repo root: `/agents:list`, `/agents:status`, and `/agents:doctor` show only live agents under the same root. `/agents:ask <name> "<request>"` opens a fresh pane, runs the target as a peer session, waits for its written reply in `agents/<Name>/peer/`, and closes the pane. Protocol: `template/agents/reference/peer.md`. Outside Herdr everything degrades to a no-op.
+
 ### Memory
 
 Two types:

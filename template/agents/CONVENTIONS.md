@@ -281,7 +281,7 @@ A scheduler is any unattended runner (cron, launchd, a cloud routine) that invok
 
 ## Herdr
 
-When the session runs inside [Herdr](https://herdr.dev) (`HERDR_ENV=1`), the router tags the pane with the agent's name and labels it `<Name> - <Role title>` (`<Name> - Peer` for peer sessions), so every live agent is visible by name in the Herdr sidebar and to `/agents:list`, `/agents:status`, and `/agents:doctor`. **Scope is the repo root**, not the Herdr workspace: agents see only live agents whose working directory is under the same root. `/agents:ask <name> "<request>"` is the only sanctioned way for one agent to engage another. Full protocol: `reference/peer.md`.
+When the session runs inside [Herdr](https://herdr.dev) (`HERDR_ENV=1`), the router tags the pane with the agent's name and labels the pane and its tab `<Name> - <Role title>` (a peer session labels only its pane, `<Name> - Peer`), so every live agent is visible by name in the Herdr sidebar and to `/agents:list`, `/agents:status`, and `/agents:doctor`. **Scope is the repo root**, not the Herdr workspace: agents see only live agents whose working directory is under the same root. `/agents:ask <name> "<request>"` is the only sanctioned way for one agent to engage another. Full protocol: `reference/peer.md`.
 
 ## Session Priority Declaration
 
