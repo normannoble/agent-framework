@@ -26,7 +26,7 @@ To detect: glob for both `agents/*/context.md` and `agents/*/*/context.md`. Use 
 
 Parse `$ARGUMENTS` and route:
 
-### `list`, `status`, or `next` as the first word
+### `list`, `status`, `next`, or `doctor` as the first word
 
 These moved to their own commands. Say so in one line — e.g. "`/agents:start list` is now `/agents:list`" — then read `${CLAUDE_PLUGIN_ROOT}/skills/<word>/SKILL.md` (if the variable is empty, glob `~/.claude/plugins/cache/*/agents/*/skills/<word>/SKILL.md` and take the highest version; in copied mode it is `.claude/skills/agents/skills/<word>/SKILL.md`) and follow it with the remaining arguments.
 
@@ -48,6 +48,7 @@ Show a brief help message:
 /agents:list                  — list all agents (add <scope> or all)
 /agents:status                — live status board (add <scope>)
 /agents:next                  — the single next best action (add <scope>)
+/agents:doctor                — health review (add <name>)
 /agents:new                   — build a new agent
 ```
 

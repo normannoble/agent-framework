@@ -197,6 +197,7 @@ func TestBuildPlanPerformsNoWrites(t *testing.T) {
 		".claude/skills/agents/skills/list/SKILL.md",
 		".claude/skills/agents/skills/status/SKILL.md",
 		".claude/skills/agents/skills/next/SKILL.md",
+		".claude/skills/agents/skills/doctor/SKILL.md",
 		".claude/skills/agents/skills/new/SKILL.md",
 	} {
 		findPlannedFile(t, plan, required)
@@ -211,8 +212,8 @@ func TestApplyInstallsExpectedFilesAndSkillMirrors(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(result.Written) != 28 {
-		t.Fatalf("written = %d, want 28: %v", len(result.Written), result.Written)
+	if len(result.Written) != 30 {
+		t.Fatalf("written = %d, want 30: %v", len(result.Written), result.Written)
 	}
 	philosophy, _ := ReadAsset("PHILOSOPHY.md")
 	if !bytes.Equal(readFile(t, filepath.Join(target, "PHILOSOPHY.md")), philosophy) {
@@ -221,7 +222,7 @@ func TestApplyInstallsExpectedFilesAndSkillMirrors(t *testing.T) {
 	if !bytes.Contains(readFile(t, filepath.Join(target, "agents/CONVENTIONS.md")), []byte("Norse saga names")) {
 		t.Fatal("naming profile was not rendered")
 	}
-	for _, skill := range []string{"start", "list", "status", "next", "new"} {
+	for _, skill := range []string{"start", "list", "status", "next", "doctor", "new"} {
 		canonical := readFile(t, filepath.Join(target, ".claude/skills/agents/skills", skill, "SKILL.md"))
 		mirror := readFile(t, filepath.Join(target, "agents/skills", skill, "SKILL.md"))
 		if !bytes.Equal(canonical, mirror) {
@@ -258,7 +259,7 @@ func TestIdenticalRerunIsTrueNoop(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(result.Written) != 0 || second.Counts()["unchanged"] != 28 {
+	if len(result.Written) != 0 || second.Counts()["unchanged"] != 30 {
 		t.Fatalf("rerun wrote %v, counts=%v", result.Written, second.Counts())
 	}
 	if !before.ModTime().Equal(after.ModTime()) {

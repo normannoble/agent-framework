@@ -224,6 +224,7 @@ All agents are invoked through the `/agents:start` router (from the `agents` plu
 /agents:list [scope|all]      — list agents
 /agents:status [scope]        — live org status board
 /agents:next [scope]          — the single next best action
+/agents:doctor [name]         — health review, recommends fixes
 ```
 
 The router parses the agent name, finds the agent directory under `agents/<name>/`, executes the startup sequence, and becomes that agent for the session. Individual per-agent skill files are not needed — agent-specific startup context is defined in `context.md`.
