@@ -9,7 +9,7 @@ argument-hint: [start|list|status|next|doctor|new|init]
 
 If `$ARGUMENTS` names a command, read `${CLAUDE_PLUGIN_ROOT}/skills/<command>/SKILL.md` (if the variable is empty, glob `~/.claude/plugins/cache/*/agents/*/skills/<command>/SKILL.md` and take the highest version; in copied mode use `.claude/skills/agents/skills/<command>/SKILL.md`). Print its `description` and `argument-hint`, then explain what it does in five lines or fewer, in plain words. Stop.
 
-Otherwise print the guide below **as is**. Do not add to it. Do not read any file.
+Otherwise your whole reply is the guide below, **as is**. Start with its first heading. No sentence before it, nothing after it. Do not read any file.
 
 ---
 
