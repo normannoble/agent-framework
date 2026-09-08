@@ -20,35 +20,41 @@ Inside Claude Code:
 
 ```
 /plugin marketplace add normannoble/agent-framework
-/plugin install agent-framework@normannoble
+/plugin install agents@normannoble
 ```
 
 Or from the shell:
 
 ```bash
 claude plugin marketplace add normannoble/agent-framework
-claude plugin install agent-framework@normannoble
+claude plugin install agents@normannoble
 ```
 
-This gives every project two skills: `/agent-framework:agent` (the router) and `/agent-framework:create-agent` (the builder). Update later with `claude plugin update agent-framework@normannoble`.
+This gives every project three skills:
 
-Then, in the workspace where you want agents, create `agents/CONVENTIONS.md` with this frontmatter and nothing else to start:
+| Skill | What it does |
+|-------|--------------|
+| `/agents:init` | Set up the current repo as a workspace (run once) |
+| `/agents:new` | Design and create an agent |
+| `/agents:start <name>` | Run an agent. Also `list`, `status`, `next` |
 
-```yaml
----
-extends: plugin
-principal: <your name>
-naming: Roman cognomina
-naming-examples: Cato, Varro, Seneca, Corvus, Regulus, Cassia, Livia, Marius
-reserved: []
----
+Then, in the repo where you want agents:
+
+```
+/agents:init
+/agents:new
+/agents:start <name>
 ```
 
-The full conventions ship inside the plugin; this short file holds only your overrides. Run `/agent-framework:create-agent` to build your first agent.
+`/agents:init` asks for your name and a naming tradition, then writes a short `agents/CONVENTIONS.md` that `extends: plugin`. The full conventions ship inside the plugin; the workspace file holds only your overrides and wins on conflict. Update the plugin later with:
+
+```bash
+claude plugin marketplace update normannoble && claude plugin update agents@normannoble
+```
 
 ### Install by copying (the installer)
 
-If you would rather have every file inside your repo, with short `/agent` and `/create-agent` commands:
+If you would rather have every file inside your repo, with short `/agents:start` and `/agents:new` commands:
 
 ```bash
 curl -fsSL https://agent-framework.sh/install.sh | sh
@@ -158,10 +164,13 @@ The framework installs two layers of conventions and the runtime skills:
 
 ### Runtime Skills
 
-- **`.claude/skills/agent/SKILL.md`** — Router skill that activates agents (`/agent <name>`)
-- **`.claude/skills/create-agent/SKILL.md`** — Builder skill for interactive agent creation (`/create-agent`)
+- **`skills/start/SKILL.md`** — Router skill that activates agents (`/agents:start <name>`)
+- **`skills/new/SKILL.md`** — Builder skill for interactive agent creation (`/agents:new`)
+- **`skills/init/SKILL.md`** — Workspace setup (`/agents:init`; plugin mode only, the installer does this job in copied mode)
 
-In plugin mode the skills come from the plugin and are namespaced (`/agent-framework:agent`). In copied mode they are installed **project-scoped** (`.claude/skills/`) as `/agent` and `/create-agent`, with browsing copies synced to `agents/skills/`.
+In plugin mode the skills come from the plugin and are namespaced (`/agents:start`, `/agents:new`, `/agents:init`). In copied mode the installer puts `start` and `new` under `.claude/skills/`, so they are `/start` and `/new`, with browsing copies synced to `agents/skills/`.
+
+The master conventions load a lean core at every agent start. Long procedures (session end, memory consolidation, tooling admin, playbook format, and so on) live in `template/agents/reference/` and are read only when needed.
 
 ## How It Works
 
@@ -317,36 +326,45 @@ Lifecycle flows connect the areas: thinking → work (when ideas become active),
 In your target repository:
 
 ```
-/create-agent
+/agents:new
 ```
 
 This walks you through 7 phases: scope, role definition, autonomy levels, soul/personality, naming, file creation, and verification. No files are created until phase 6 — the first five phases are pure design conversation.
 
-## Shared Install without the plugin (symlinks)
+## Releasing the plugin
 
-If you develop the framework itself and want edits to show up instantly under the short names `/agent` and `/create-agent`, skip the plugin and symlink a checkout:
+Plugin users get a new version only when `version` in `.claude-plugin/plugin.json` changes. From a clean checkout:
 
-1. Symlink the skills into your user-level skills folder so every project sees them:
-   ```bash
-   ln -s /path/to/agent-framework/skills/agent ~/.claude/skills/agent
-   ln -s /path/to/agent-framework/skills/create-agent ~/.claude/skills/create-agent
-   ```
-2. Keep `template/agents/CONVENTIONS.md` as the single master.
-3. In each workspace, make `agents/CONVENTIONS.md` a short file whose frontmatter says `extends: /path/to/agent-framework/template/agents/CONVENTIONS.md` (an absolute path here, since there is no plugin root) plus `principal`, `naming`, `naming-examples`, and `reserved`. Put only workspace-specific rules below the frontmatter. The workspace file wins on conflict.
+```bash
+./release.sh          # patch bump, validate, commit, push, update your local install
+./release.sh minor    # or major, or an exact version like 1.4.0
+```
 
-The router reads the master first, then the workspace file. One fix in the master reaches every workspace. See the **Inheritance** section at the top of `template/agents/CONVENTIONS.md`.
+Then restart Claude Code. The Go installer has its own release flow (below); a plugin release does not publish a binary.
+
+## Developing the framework without the plugin (symlinks)
+
+To see edits instantly without a release, symlink a checkout into your user skills folder. The commands then lose their `agents:` prefix (`/start`, `/new`, `/init`):
+
+```bash
+ln -s /path/to/agent-framework/skills/start ~/.claude/skills/start
+ln -s /path/to/agent-framework/skills/new ~/.claude/skills/new
+ln -s /path/to/agent-framework/skills/init ~/.claude/skills/init
+```
+
+In each workspace, set `extends:` in `agents/CONVENTIONS.md` to the absolute path of `template/agents/CONVENTIONS.md` instead of `plugin`.
 
 ## Customisation
 
 ### Tool Permissions
 
-The `/agent` skill includes tool permissions in its frontmatter:
+The `/agents:start` skill includes tool permissions in its frontmatter:
 
 ```yaml
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash(date), Bash(ls), AskUserQuestion
 ```
 
-Edit `.claude/skills/agent/SKILL.md` to match your toolchain. If your agents need database access, API calls, or CLI tools, add the relevant permissions here.
+Edit `skills/start/SKILL.md` (or the copied `.claude/skills/start/SKILL.md`) to match your toolchain. If your agents need database access, API calls, or CLI tools, add the relevant permissions here.
 
 ### Adding Tools
 

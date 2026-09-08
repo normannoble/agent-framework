@@ -2,26 +2,23 @@
 
 How to build and structure agents in this workspace.
 
-## Inheritance (shared master + workspace overrides)
+## Inheritance
 
-This file can be used two ways:
+This master is shared. A workspace's `agents/CONVENTIONS.md` carries frontmatter (`extends: plugin`, `principal`, `naming`, `naming-examples`, `reserved`) and only the rules that differ from, or add to, this file. **The workspace file wins on conflict.** Where this file says `{{PRINCIPAL}}`, `{{NAMING_TRADITION}}`, or `{{NAMING_EXAMPLES}}`, use the workspace frontmatter values. In copied mode (installer) the placeholders are already substituted.
 
-- **Copied** into a workspace as `agents/CONVENTIONS.md` (what `setup.sh` does). Placeholders like `{{PRINCIPAL}}` are substituted at install time.
-- **Shared.** The workspace's `agents/CONVENTIONS.md` stays short and declares in its frontmatter:
+## Reference files (read on demand, never at startup)
 
-  ```yaml
-  ---
-  extends: plugin   # or an absolute path to a checkout of template/agents/CONVENTIONS.md
-  principal: <name>
-  naming: <tradition>            # e.g. Roman cognomina
-  naming-examples: <comma list>  # the pool
-  reserved: [<names in use>]
-  ---
-  ```
+Long procedures live beside this file in `reference/`. In plugin mode that is `${CLAUDE_PLUGIN_ROOT}/template/agents/reference/`; in copied mode it is `agents/reference/`.
 
-  `extends: plugin` means the master shipped inside the installed plugin (`${CLAUDE_PLUGIN_ROOT}/template/agents/CONVENTIONS.md`). An absolute path works too, for a symlinked checkout. The router reads the master first, then the workspace file. **The workspace file wins on conflict.** It should contain only rules that differ from, or add to, the master. Where the master says `{{PRINCIPAL}}`, `{{NAMING_TRADITION}}`, `{{NAMING_EXAMPLES}}`, read the value from the workspace frontmatter.
-
-Shared mode means one fix in the master reaches every workspace. Prefer it when one person runs several workspaces.
+| File | Read when |
+|------|-----------|
+| `session-end.md` | The session is closing (all eight steps) |
+| `memory.md` | Consolidating memory, or writing a non-session memory entry |
+| `tooling.md` | Creating an agent, adding a tool, or unsure of a tool action's level |
+| `playbooks.md` | Writing or editing a playbook |
+| `autonomy-format.md` | Creating an agent or restructuring `autonomy.md` |
+| `tracker-cleanup.md` | Asked to clean up the action tracker |
+| `index-maintenance.md` | Updating an INDEX.md at session end |
 
 ---
 
@@ -33,7 +30,7 @@ Default to challenging and clarifying the thinking before acting. Ask hard quest
 
 ## Naming
 
-Agents are named using **{{NAMING_TRADITION}}** — {{NAMING_DESCRIPTION}}. Names are also invocation handles: the agent's name is its skill command (`/agent <name>`, not `/agent platform-strategy-lead`).
+Agents are named using **{{NAMING_TRADITION}}** — {{NAMING_DESCRIPTION}}. Names are also invocation handles: the agent's name is its skill command (`/agents:start <name>`, not `/agents:start platform-strategy-lead`).
 
 Names should not signal the agent's domain. A project-scoped agent may outlive its original project, or be reassigned. Neutral names survive these changes.
 
@@ -143,22 +140,13 @@ Session memories reference `actions.md` for action items rather than duplicating
 
 #### Tracker Cleanup Procedure
 
-When {{PRINCIPAL}} asks you to review or clean up your action tracker, follow these steps:
-
-1. Remove any struck-through or completed items from Open — move to Completed, delete the row from Open
-2. Archive completed items older than 30 days to `actions-archive.md`
-3. Refresh stale due dates — anything marked "this week" that's >7 days old gets a new date or TBD
-4. Cross-check shared items against other agents' trackers for status changes
-5. Apply P1/P2/P3 sections if not already present
-6. Check P1 count — if >8, something needs deprioritising
-7. Scan for items that may be moot or complete but not marked — present candidates to {{PRINCIPAL}}
-8. Present a summary of changes for {{PRINCIPAL}}'s confirmation before saving
+When {{PRINCIPAL}} asks you to review or clean up your tracker, read `reference/tracker-cleanup.md` (beside this file) and follow it.
 
 ### context.md
 
-Frontmatter carries `scope` and `title`. A retired agent adds `status: retired`, `retired: YYYY-MM-DD`, and `last-active: YYYY-MM-DD`. Retired agents keep their files (history has value) but are hidden from `/agent list`, `/agent status`, and `/agent next` unless `all` is passed. Activating a retired agent by name still works; the router says it is retired first.
+Frontmatter carries `scope` and `title`. A retired agent adds `status: retired`, `retired: YYYY-MM-DD`, and `last-active: YYYY-MM-DD`. Retired agents keep their files (history has value) but are hidden from `/agents:start list`, `/agents:start status`, and `/agents:start next` unless `all` is passed. Activating a retired agent by name still works; the router says it is retired first.
 
-Defines what additional files the agent needs on startup and which project files to update on session end. Frontmatter includes `scope` and `title` (used by `/agent list`). Body has two sections:
+Defines what additional files the agent needs on startup and which project files to update on session end. Frontmatter includes `scope` and `title` (used by `/agents:start list`). Body has two sections:
 - **Startup Context** — paths to read after the standard agent files (soul, role, autonomy, actions, memory)
 - **Project Files** — paths to check for updates during Session End Protocol
 
@@ -201,7 +189,7 @@ The autonomy model applies differently depending on how the agent is designed.
 
 **Junior agents** start with more actions at L1-L2 and need detailed runbooks in `tools.md` and explicit scope boundaries in `role.md`. They're reliable executors with well-defined playbooks. Promotion is slower and more granular.
 
-Both are valid design choices. Senior agents trade documentation for judgment; junior agents trade judgment for predictability. The framework defaults to senior — if you want a junior agent, be deliberate about it in Phase 2 (Role) and Phase 3 (Autonomy) of `/create-agent`.
+Both are valid design choices. Senior agents trade documentation for judgment; junior agents trade judgment for predictability. The framework defaults to senior — if you want a junior agent, be deliberate about it in Phase 2 (Role) and Phase 3 (Autonomy) of `/agents:new`.
 
 ## Promotion & Demotion
 
@@ -219,42 +207,7 @@ Authority levels change through explicit signals:
 
 ## autonomy.md Format
 
-```markdown
-# <Name> — Autonomy
-
-Operating authority for <Name>. Items move up the ladder as trust is demonstrated.
-See `agents/CONVENTIONS.md` § Autonomy.
-
-## L5 — Own
-Act independently. Report in session summary.
-
-- <action type>
-
-## L4 — Act & Inform
-Act, then flag it in the moment.
-
-- <action type>
-
-## L3 — Intend
-State "I intend to..." and proceed unless redirected.
-
-- <action type>
-
-## L2 — Recommend
-Present recommendation with reasoning. Wait for approval.
-
-- <action type>
-
-## L1 — Flag
-Surface for {{PRINCIPAL}} to decide.
-
-- <action type>
-
-## Changelog
-
-| Date | Item | From | To | Context |
-|------|------|------|----|---------|
-```
+The file template (five level sections plus a dated changelog) is in `reference/autonomy-format.md`. Read it when creating an agent or restructuring an `autonomy.md`.
 
 ---
 
@@ -262,14 +215,14 @@ Surface for {{PRINCIPAL}} to decide.
 
 ## Invocation
 
-All agents are invoked through the `/agent` router skill (`.claude/skills/agent/SKILL.md`):
+All agents are invoked through the `/agents:start` router (from the `agents` plugin; `/start` in copied mode):
 
 ```
-/agent <name>          — activate an agent (status check)
-/agent <name> <topic>  — activate and work on a topic
-/agent <name> close    — end session and save state
-/agent list            — list all agents
-/agent list <scope>    — list agents in a scope
+/agents:start <name>          — activate an agent (status check)
+/agents:start <name> <topic>  — activate and work on a topic
+/agents:start <name> close    — end session and save state
+/agents:start list            — list all agents
+/agents:start list <scope>    — list agents in a scope
 ```
 
 The router parses the agent name, finds the agent directory under `agents/<name>/`, executes the startup sequence, and becomes that agent for the session. Individual per-agent skill files are not needed — agent-specific startup context is defined in `context.md`.
@@ -301,14 +254,14 @@ Not every session is an interactive pairing with {{PRINCIPAL}}. Automated schedu
 
 | Type | Trigger | Context load | Writes |
 |------|---------|--------------|--------|
-| **Session** (interactive) | {{PRINCIPAL}} runs `/agent <name>` | Full startup sequence | Session memory, action tracker, commit |
+| **Session** (interactive) | {{PRINCIPAL}} runs `/agents:start <name>` | Full startup sequence | Session memory, action tracker, commit |
 | **Tick** (automated) | A scheduler fires a due task | **Trimmed** — conventions, soul, name, role, autonomy, tools, actions, standing memory, the inbox, the specific task/playbook, `context.md` startup paths. **Not** the recent-2 session memories | The **inbox only** — never session memory, action tracker, or commit |
 
 **Why trimmed + inbox-only:** if ticks wrote session memories, a run of thin automated ticks between pairing sessions would flush the substantive interactive sessions out of the recent-2 startup window and rot the agent's context. So ticks stay out of `memory/sessions/` entirely. But their work must not vanish either — so ticks deposit their output in a rolling inbox that the next interactive session drains.
 
 **The scheduled-run inbox** (`memory/scheduled/inbox.md`): a rolling, append-only ledger. Ticks append `UNPROCESSED` entries. At interactive startup (step 16), the agent drains it — folds entries into the session, promotes substance into `actions.md` or a memory entry, then flips them to `PROCESSED`. Only agents with scheduled tasks have an inbox; if the file is absent, step 16 is a no-op.
 
-A scheduler is any unattended runner (cron, launchd, a cloud routine) that invokes `claude -p` against a task register. It must: cap each task with an autonomy ceiling, cap tool calls, never commit or push, never use the `/agent` router, and log every run. A reference implementation lives in the Mindvalley workspace under `agents/scheduler/` (`prompt.md`, `policies.md`, `scheduled-tasks.md`).
+A scheduler is any unattended runner (cron, launchd, a cloud routine) that invokes `claude -p` against a task register. It must: cap each task with an autonomy ceiling, cap tool calls, never commit or push, never use the `/agents:start` router, and log every run. A reference implementation lives in the Mindvalley workspace under `agents/scheduler/` (`prompt.md`, `policies.md`, `scheduled-tasks.md`).
 
 ## Session Priority Declaration
 
@@ -344,66 +297,7 @@ The agent should not silently allow session priorities to be displaced by conver
 
 ## Session End Protocol
 
-Triggered by `/agent <name> close`, `/agent <name> end`, `/agent <name> wrap up`, or when {{PRINCIPAL}} signals the session is ending.
-
-### Step 1: Review the session
-
-Scan the full conversation and identify:
-- Topics discussed
-- Decisions made (with rationale)
-- Action items created or completed (who, what, by when)
-- Open questions or unresolved items
-- Communications sent or received
-- Documents created, updated, or shared
-- Any changes to project state
-- **Session focus reconciliation:** Which declared focus items were addressed? Which were not, and why? Did any side topics emerge that need P1/P2 actions?
-
-### Step 2: Update action tracker
-
-Update `actions.md`:
-- Add new action items to Open
-- Move completed items to Completed with date
-- Update statuses and flag items at risk or overdue
-
-### Step 3: Review autonomy
-
-Check if {{PRINCIPAL}} gave any explicit signals about authority levels during the session:
-- "Good call, just do that next time" or similar → **promotion**
-- "Check with me before doing that" or similar → **demotion**
-- Agent felt uncertain about authority level → note for clarification next session
-
-If any changes occurred, update `autonomy.md` (both the level sections and the changelog).
-
-### Step 4: Create session memory
-
-Write to `memory/sessions/YYYY-MM-DD-<topic>.md`:
-```yaml
----
-date: YYYY-MM-DD
-type: session
-session_id: ${CLAUDE_SESSION_ID}
-resume: claude --resume ${CLAUDE_SESSION_ID}
----
-```
-Include topics discussed, decisions made, and open questions. Do NOT duplicate action items — reference `actions.md`.
-
-If the session produced durable rules or decisions, write a separate entry to `memory/standing/` and add it to the Standing section in MEMORY.md.
-
-### Step 5: Update memory index
-
-Add a one-line summary with link to `MEMORY.md` under the appropriate section.
-
-### Step 6: Update project files
-
-Read `context.md` for the list of project files. Update relevant project logs and status files if progress was made.
-
-### Step 7: Commit and push
-
-Stage all session changes, commit with a descriptive message, push to origin.
-
-### Step 8: Confirm
-
-Show {{PRINCIPAL}} a brief summary of what was saved and the current action item status.
+Triggered by `/agents:start <name> close`, `end`, `wrap up`, or when {{PRINCIPAL}} signals the session is ending. **When triggered, read `reference/session-end.md` (beside this file) and follow all eight steps:** review the session, update the action tracker, review autonomy, write the session memory, update MEMORY.md, update project files, commit and push, confirm. Do not skip steps and do not improvise the order.
 
 ## Session Continuity
 
@@ -450,44 +344,11 @@ Contain: topics discussed, decisions made, open questions. Do NOT duplicate acti
 
 Present only for agents with scheduled tasks. Holds `inbox.md` — the rolling ledger that **tick** (automated) runs write to instead of `memory/sessions/`. Drained at interactive startup (see § Session Types). Never enters the recent-2 window.
 
-### Memory Entry Types
+### Entry types, consolidation, workspace memory
 
-Use these in the `type` frontmatter field:
-- `session` — session summary (default) → `memory/sessions/`
-- `decision` — key decision with rationale and context → `memory/standing/`
-- `baseline` — project state snapshot → `memory/standing/`
-- `stakeholder-feedback` — stakeholder positions, alignment/divergence → `memory/standing/`
+Frontmatter `type` values, the full consolidation procedure, and the workspace-memory file format are in `reference/memory.md`.
 
-### Baseline Consolidation
-
-When the agent has accumulated more than 5 standing entries or more than 10 session entries, consolidate:
-- Create a new baseline entry in `memory/standing/` that captures **every** durable rule, decision, path, ID, and threshold from the existing standing entries (losing a rule is the failure mode; length is not)
-- Move the superseded standing entries to `memory/archive/standing/`
-- Keep the 10 most recent session entries; move the rest to `memory/archive/sessions/`
-- Write `memory/archive/INDEX.md` listing every archived file with its one-line summary
-- Rewrite MEMORY.md so Standing lists the baseline (plus anything genuinely new since) and Sessions lists the kept 10, one line each, ≤40 words
-
-Wiki-links resolve by filename, so moving files does not break `[[...]]` references.
-
-**Why this matters:** everything in `memory/standing/` and all of MEMORY.md is read at every startup. A 40-entry standing memory costs ~60k tokens before the agent says hello. Large data files (exports, scans, dumps) never belong in `memory/standing/` — put them under `work/` or `knowledge/` and leave a one-page summary that points to them.
-
-### Workspace Memory File Format
-
-Workspace-level memories (shared operational knowledge, distinct from agent memories) use this frontmatter:
-
-```yaml
----
-title: <Description>
-type: memory
-category: operational | learning | personal
-scope: workspace | project
-tags: [<1-3 tags>]
-created: YYYY-MM-DD
-updated: YYYY-MM-DD
----
-```
-
-**Naming:** lowercase hyphenated slugs. No date prefix — updated in place.
+**Consolidation trigger (check every startup):** more than 5 standing entries or more than 10 session entries means consolidate this session or next — read `reference/memory.md` and do it. Everything in `memory/standing/` and all of MEMORY.md is read at every startup; a 40-entry standing memory costs ~60k tokens before the agent says hello. Large data files (exports, scans, dumps) never belong in `memory/standing/` — put them under `work/` or `knowledge/` and leave a one-page summary that points to them.
 
 When you discover operational knowledge worth persisting — a tool config, a workaround, a convention the user corrects you on — write it to your own `memory/standing/`.
 
@@ -513,77 +374,13 @@ Tool configuration is split across three levels:
 
 Per-tool reference files are loaded on demand, not at startup. Agents read the shared index and their own tools.md during startup; they consult the per-tool files when they need to use a specific tool.
 
-### Autonomy Integration
+### Autonomy defaults, admin checklist, adding a tool
 
-Each tool file (`agents/tools/<tool>.md`) defines default autonomy levels for its actions. Agents override these in their `autonomy.md` as trust develops through the standard promotion/demotion process.
-
-Suggested defaults for new agents:
-
-| Action | Default Level |
-|--------|--------------|
-| Read communications / calendar / shared files | L5 — Own |
-| Read issues / projects | L5 — Own |
-| Update issue status | L4 — Act & Inform |
-| Send internal communication (routine) | L3 — Intend |
-| Send internal communication (sensitive) | L2 — Recommend |
-| Create issues, add comments | L3 — Intend |
-| Create / modify calendar events | L3 — Intend |
-| Read PRs, checks, CI status | L5 — Own |
-| Create branches, push code | L4 — Act & Inform |
-| Create PRs | L4 — Act & Inform |
-| Review PRs (comment) | L3 — Intend |
-| Merge own PRs after approval | L3 — Intend |
-| Review PRs (approve/request changes) | L2 — Recommend |
-| Browse public websites (research, documentation) | L3 — Intend |
-| Browse authenticated internal tools | L2 — Recommend |
-| Read-only data queries (non-production) | L3 — Intend |
-| Read-only data queries (production) | L2 — Recommend |
-| Write data queries | Blocked — requires explicit promotion |
-| Send external communication | Blocked — requires explicit promotion |
-
-"Sensitive" is left to agent judgment — examples include escalations, legal matters, anything involving external stakeholders, or communications that could set expectations on behalf of the organisation.
-
-### Post-Creation Admin Checklist
-
-After `/create-agent` completes the code side, external tool setup may be required. Customise this checklist to match your tool stack:
-
-1. **Communication aliases** — set up the agent's email alias or messaging identity
-2. **Send-as configuration** — configure the agent to send from its own identity
-3. **Issue tracker labels** — add agent-specific labels for ownership tracking
-4. **Version control access** — if the agent needs its own account or permissions
-
-### Adding a New Tool
-
-When introducing a new tool to the agent framework:
-
-1. **Tool file** — Create `agents/tools/<tool>.md` with setup, commands, scope constraints, and autonomy defaults
-2. **Tools index** — Add a row to the table in `agents/tools/INDEX.md`
-3. **Agent tools.md** — Add the tool section to each agent that needs access, with agent-specific config (identity, commands)
-4. **Agent autonomy.md** — Add the tooling actions at the appropriate levels, with a changelog entry
-5. **Create-agent skill** — If the tool applies to all agents, update the `tools.md` template reference in the skill
-6. **This checklist** — If the tool requires manual admin setup, add a step to the Post-Creation Admin Checklist above
+Suggested autonomy levels per tool action, the post-creation admin checklist (aliases, labels, accounts), and the steps for adding a new tool are in `reference/tooling.md`. Read it when creating an agent, adding a tool, or unsure what level a tool action sits at.
 
 ## INDEX.md Maintenance
 
-Agents are responsible for maintaining INDEX.md files within their scope.
-
-### Current Status sections
-
-Current Status sections can be tagged with an HTML comment for automated maintenance:
-
-```html
-<!-- agent:<name> | cadence:weekly | source:<tracker> -->
-```
-
-- **When to update:** During weekly snapshots, after significant task changes, or on user request.
-- **Content:** 3–5 factual bullet points summarizing what's in progress, what's blocked, and what's next.
-- **Staleness:** Flag when a Current Status section hasn't been updated in >2 weeks.
-
-### When to create or update
-
-- **On new project setup:** Create `INDEX.md` as part of the setup checklist.
-- **On new subfolder creation:** When creating `notes/`, `deliverables/`, or `reports/` for the first time, create an `INDEX.md`.
-- **On content changes:** Only update prose sections if the user asks or if structural changes make the index misleading.
+INDEX.md files carry a Current Status section that agents keep fresh at session end. Rules for what to update and when to create one are in `reference/index-maintenance.md`. Read it at session end when a project file is listed in `context.md`.
 
 ## Playbooks
 
@@ -622,113 +419,8 @@ An agent with L5 authority on every action in a playbook may still run it as P2 
 
 Like autonomy, execution modes can be promoted. If a P2 playbook runs successfully three times with no substantive changes at the review gate, consider promoting it to P1. Record the change in the playbook's changelog.
 
-### Playbook Directory Structure
+### Structure, format, lifecycle
 
-Playbooks live under each agent's directory:
+Directory layout, file frontmatter, body structure, tool usage in steps, and the create → promote → retire lifecycle are in `reference/playbooks.md`. Read it when writing or editing a playbook.
 
-```
-agents/<agent-name>/
-├── ...existing files...
-└── playbooks/
-    ├── weekly-report.md
-    └── data-refresh.md
-```
-
-Agent-specific because playbooks encode how *that agent* does the work. If a playbook genuinely spans multiple agents, it goes in the shared scope (`agents/playbooks/`) — but this should be rare.
-
-### Playbook File Format
-
-```yaml
----
-title: <Descriptive name>
-type: playbook
-execution_mode: P1 | P2 | P3 | P4
-owner: <agent name>
-skills: [<skill-1>, <skill-2>]
-created: YYYY-MM-DD
-updated: YYYY-MM-DD
----
-```
-
-### Playbook Body Structure
-
-```markdown
-# <Playbook Name>
-
-<One paragraph: what this playbook does and why it exists.>
-
-## Trigger
-
-<When this playbook should be executed. Can be:>
-<- **Cadence:** "Every Monday" or "End of each week">
-<- **Event:** "When a new item is added to the queue">
-<- **Situation:** "When {{PRINCIPAL}} asks for status">
-<- **Manual:** "When invoked by {{PRINCIPAL}}">
-
-## Inputs
-
-<What the agent needs before starting. Data sources, prerequisites, access.>
-
-## Steps
-
-<Numbered steps. Each step describes what to do and includes the exact
-tool commands needed to execute it in fenced code blocks.>
-
-<Mark review gates and escalation points inline:>
-
-1. Step one
-   ```bash
-   command --to --execute
-   ```
-2. Step two
-3. **[GATE]** Present output to {{PRINCIPAL}} for review before continuing
-4. Step three (only after gate approval)
-
-<For exception-based (P3), mark known failure points:>
-
-1. Step one
-2. Step two — **[ESCALATE if]** external data is unavailable or format has changed
-
-## Output
-
-<What the playbook produces — files, emails, updates, reports.>
-
-## Changelog
-
-| Date | Change | Reason |
-|------|--------|--------|
-```
-
-### Tool Usage in Steps
-
-Steps include the specific tool commands needed to execute them — the exact CLI invocation, API call, or query. This serves two purposes:
-
-1. **Consistency** — the agent executes the same way every time, not re-deriving the approach
-2. **Maintainability** — when a tool changes (new API version, CLI flag, endpoint), the playbook surfaces as a place to update
-
-Embed commands inline within the step they belong to using fenced code blocks. Reference `tools.md` for account configuration and authentication — playbooks carry the specific invocation, not the setup.
-
-### Playbook Lifecycle
-
-**Birth:** A playbook is created when an agent has executed the same task at least twice and the steps are stable enough to codify. Don't write playbooks speculatively — capture proven patterns.
-
-**Refinement:** After each execution, note what worked and what didn't. Update steps, add edge cases, adjust the execution mode if warranted.
-
-**Promotion:** When a P2 playbook consistently passes review gates without changes, promote to P1. Record in the changelog.
-
-**Retirement:** When a playbook is no longer relevant (process changed, responsibility moved), archive or delete it. Don't keep dead playbooks.
-
-### Playbook Startup Integration
-
-Playbooks are lazy-loaded to conserve context:
-
-1. **Startup (step 14):** Glob `playbooks/*.md` and read only the frontmatter and first paragraph (description) of each playbook — not the full steps or tool commands
-2. **Trigger check (step 15):** Evaluate each playbook's trigger against today's date, day of week, and session context. Flag any that should execute this session. Include flagged playbooks in the session priority declaration (step 4 of Session Priority Declaration)
-3. **Execution:** When a playbook is triggered, read the full file at that point — steps, tool commands, and all
-
-### Playbook Session End Integration
-
-During session end, if a playbook was executed:
-- Note it in the session memory ("Executed: weekly-report playbook")
-- Update the playbook's changelog if the steps deviated or the mode needs adjustment
-- If the agent improvised a multi-step procedure that wasn't a playbook, flag it: "Candidate for new playbook: <description>"
+**At startup:** glob `playbooks/*.md`, read only frontmatter and the first paragraph, and run the trigger check (startup steps 14–15). **At session end:** if a repeatable procedure was executed twice or more, propose codifying it as a playbook; update `Last run` on any playbook that ran.

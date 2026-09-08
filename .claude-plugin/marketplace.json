@@ -2,11 +2,14 @@
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "normannoble",
   "description": "Norman Noble's Claude Code plugins",
-  "owner": { "name": "Norman Noble", "email": "normannoble@outlook.com" },
+  "owner": {
+    "name": "Norman Noble",
+    "email": "normannoble@outlook.com"
+  },
   "plugins": [
     {
-      "name": "agent-framework",
-      "description": "Persistent AI collaboration partners with calibrated autonomy, memory, and playbooks.",
+      "name": "agents",
+      "description": "Persistent AI collaboration partners in Claude Code \u2014 named agents with calibrated autonomy, memory, action trackers, and playbooks. Skills: /agents:start (run an agent), /agents:new (build one), /agents:init (set up a workspace).",
       "source": "./",
       "category": "productivity",
       "homepage": "https://github.com/normannoble/agent-framework"

@@ -5,13 +5,13 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Bash(mkdir), Bash(ls), Bash(date),
 argument-hint: "[scope — e.g., Acme] (optional in single-domain workspaces)"
 ---
 
-# /create-agent — Agent Builder
+# /agents:new — Agent Builder
 
 Build a new agent following the conventions in `agents/CONVENTIONS.md`.
 
 ## Startup
 
-1. Read `agents/CONVENTIONS.md` to understand the template. If its frontmatter has `extends: <path>`, read that master first (if the value is `plugin`, resolve it with `ls "${CLAUDE_PLUGIN_ROOT}/template/agents/CONVENTIONS.md"`, or glob `~/.claude/plugins/cache/*/agent-framework/*/template/agents/CONVENTIONS.md` if the variable is empty); the workspace file wins on conflict
+1. Read `agents/CONVENTIONS.md` to understand the template. If its frontmatter has `extends: <path>`, read that master first (if the value is `plugin`, resolve it with `ls "${CLAUDE_PLUGIN_ROOT}/template/agents/CONVENTIONS.md"`, or glob `~/.claude/plugins/cache/*/agents/*/template/agents/CONVENTIONS.md` if the variable is empty); the workspace file wins on conflict
 2. Read the reserved names list from CONVENTIONS.md to avoid conflicts
 3. **Detect workspace layout:**
    - Glob for `agents/*/context.md` (single-domain: agents are direct children of `agents/`)
@@ -230,14 +230,14 @@ Once name, role, soul, and autonomy are confirmed, create the full agent structu
    - Capture the current state of the project this agent is scoped to
    - Note what exists, what's in progress, what's pending
 
-Note: Individual per-agent skill files are **not** created. All agents are invoked through the `/agent` router (e.g., `/agent <name>`).
+Note: Individual per-agent skill files are **not** created. All agents are invoked through the `/agents:start` router (e.g., `/agents:start <name>`).
 
 ### Phase 7: Verify
 
 After creation:
 - List the created files
-- Show the invocation command (`/agent <name>`)
-- Remind the principal to test with `/agent <name>` in a new conversation
+- Show the invocation command (`/agents:start <name>`)
+- Remind the principal to test with `/agents:start <name>` in a new conversation
 
 ## Rules
 

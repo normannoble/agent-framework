@@ -1,6 +1,6 @@
 # Workspace Conventions
 
-This is an agent workspace. All work flows through named AI agents invoked via the `/agent` router. Agents discover context through their startup sequence and INDEX.md files.
+This is an agent workspace. All work flows through named AI agents invoked via the `/agents:start` router. Agents discover context through their startup sequence and INDEX.md files.
 
 ## Naming
 

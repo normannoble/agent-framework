@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path"
@@ -405,8 +406,24 @@ func BuildPlan(options InstallOptions) (*InstallPlan, error) {
 	if err := add("agents/tools/INDEX.md", toolsIndex, "Shared tools index", "", false, true, false); err != nil {
 		return nil, err
 	}
+	referenceEntries, err := fs.ReadDir(agentframework.Assets, "template/agents/reference")
+	if err != nil {
+		return nil, err
+	}
+	for _, entry := range referenceEntries {
+		if entry.IsDir() {
+			continue
+		}
+		content, err := RenderAsset("template/agents/reference/"+entry.Name(), options)
+		if err != nil {
+			return nil, err
+		}
+		if err := add("agents/reference/"+entry.Name(), content, "Agent conventions reference", "", false, true, false); err != nil {
+			return nil, err
+		}
+	}
 
-	directoryPaths := []string{"agents", "agents/tools", "agents/skills"}
+	directoryPaths := []string{"agents", "agents/tools", "agents/reference", "agents/skills"}
 	if options.InstallSkills {
 		for _, skill := range skills {
 			content, err := RenderAsset(fmt.Sprintf("skills/%s/SKILL.md", skill.Name), options)

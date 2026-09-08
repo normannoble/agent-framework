@@ -1,11 +1,11 @@
 ---
-description: Agent router — invoke, list, and manage workspace agents. Use /agent <name> to activate an agent, /agent list to see all agents, /agent status for a live org status board, /agent next for the single next best action, or /agent list <scope> for scope-filtered listing.
+description: Start a workspace agent by name, or list / status / next across the agent org. Use /agents:start <name> to activate an agent, /agents:start list to see all agents, /agents:start status for a live org status board, /agents:start next for the single next best action, or /agents:start list <scope> for scope-filtered listing.
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash(date), Bash(ls), AskUserQuestion
 argument-hint: <name> [topic] | list [scope|all] | status [scope|all] | next [scope|all]
 ---
 
-# /agent — Agent Router
+# /agents:start — Agent Router
 
 You are the agent router for this workspace. You activate, list, and manage agents.
 
@@ -20,13 +20,13 @@ To detect: glob for both `agents/*/context.md` and `agents/*/*/context.md`. Use 
 
 **Retired agents.** A `context.md` whose frontmatter has `status: retired` is hidden from `list`, `status`, and `next` unless the argument `all` is given. Activating a retired agent by name still works — say "<name> is retired since <date>" first, then continue.
 
-**Conventions inheritance.** Wherever this skill says "read `agents/CONVENTIONS.md`": read the workspace file; if its frontmatter has `extends: <path>`, read that master file **first**, then the workspace file. If the value is the word `plugin`, the master is the copy shipped with this plugin: run `ls "${CLAUDE_PLUGIN_ROOT}/template/agents/CONVENTIONS.md"` to resolve the path, then read it. If that variable is empty, glob `~/.claude/plugins/cache/*/agent-framework/*/template/agents/CONVENTIONS.md` and take the highest version. The workspace file wins on conflict. Placeholders in the master (`{{PRINCIPAL}}`, `{{NAMING_TRADITION}}`, `{{NAMING_EXAMPLES}}`) take their values from the workspace file's frontmatter (`principal`, `naming`, `naming-examples`).
+**Conventions inheritance.** Wherever this skill says "read `agents/CONVENTIONS.md`": read the workspace file; if its frontmatter has `extends: <path>`, read that master file **first**, then the workspace file. If the value is the word `plugin`, the master is the copy shipped with this plugin: run `ls "${CLAUDE_PLUGIN_ROOT}/template/agents/CONVENTIONS.md"` to resolve the path, then read it. If that variable is empty, glob `~/.claude/plugins/cache/*/agents/*/template/agents/CONVENTIONS.md` and take the highest version. The workspace file wins on conflict. Placeholders in the master (`{{PRINCIPAL}}`, `{{NAMING_TRADITION}}`, `{{NAMING_EXAMPLES}}`) take their values from the workspace file's frontmatter (`principal`, `naming`, `naming-examples`).
 
 ## Routing
 
 Parse `$ARGUMENTS` and route:
 
-### `/agent list` or `/agent list <scope>`
+### `/agents:start list` or `/agents:start list <scope>`
 1. Glob for both `agents/*/context.md` and `agents/*/*/context.md` (relative to workspace root)
 2. Read each `context.md` frontmatter to extract `scope`, `title`, and the agent name (from the directory name)
 3. Present a table:
@@ -37,9 +37,9 @@ Parse `$ARGUMENTS` and route:
 | Sigrid | — | Senior Product Manager |
 ```
 
-If a scope filter was given (e.g., `/agent list Acme`), only show agents in that scope. `/agent list all` includes retired agents, with a Status column.
+If a scope filter was given (e.g., `/agents:start list Acme`), only show agents in that scope. `/agents:start list all` includes retired agents, with a Status column.
 
-### `/agent status` or `/agent status <scope>`
+### `/agents:start status` or `/agents:start status <scope>`
 
 Render a **live status board** of the whole agent org by reading each agent's tracker at run time, so it is never stale.
 
@@ -64,13 +64,13 @@ Render a **live status board** of the whole agent org by reading each agent's tr
    - **In flight:** active, unblocked missions across the org.
    - **Blocked / gated:** items whose status is blocked / gated / awaiting, each with what it waits on.
    - **Stale (>14 days):** agents whose `Last reviewed` is more than 14 days before today.
-5. If a scope filter was given (e.g., `/agent status Acme`), restrict to that scope.
+5. If a scope filter was given (e.g., `/agents:start status Acme`), restrict to that scope.
 
 Heading: `# Agent Org Status — <today's date>` (do **not** hardcode a project name — keep it portable across workspaces).
 
-### `/agent next` or `/agent next <scope>`
+### `/agents:start next` or `/agents:start next <scope>`
 
-Recommend the **single next best action** across the whole org — which agent to engage, on what, and *why* — so the principal never has to guess where to go next. This is the dependency-aware companion to `/agent status`: status shows the *whole board*; **next** picks the *one move*.
+Recommend the **single next best action** across the whole org — which agent to engage, on what, and *why* — so the principal never has to guess where to go next. This is the dependency-aware companion to `/agents:start status`: status shows the *whole board*; **next** picks the *one move*.
 
 1. Run `date` (for staleness + recency context).
 2. Glob both `agents/*/context.md` and `agents/*/*/context.md`. For each agent read:
@@ -85,15 +85,15 @@ Recommend the **single next best action** across the whole org — which agent t
    - **Then:** the 1–2 actions that come right after it (the chain), one line each.
    - **Correctly waiting (not your hands yet):** the top queued items + what each waits on — so the principal knows what's *deliberately* parked and doesn't chase it.
    - If two actions are genuinely co-equal, say so and give the tiebreak rather than hedging.
-6. If a scope filter is given (e.g., `/agent next Acme`), restrict to that scope.
+6. If a scope filter is given (e.g., `/agents:start next Acme`), restrict to that scope.
 
 Heading: `# Next Best Action — <today's date>` (no hardcoded project name — keep it portable).
 
 **Judgment note:** this ranks from tracker text. For the nuanced calls (e.g. "queue this decision behind incoming evidence"), activating the **orchestrator** agent gives richer dependency-aware reasoning than the tracker text alone encodes.
 
-### `/agent <name>` or `/agent <name> <topic>`
+### `/agents:start <name>` or `/agents:start <name> <topic>`
 1. Find the agent directory: Glob for both `agents/<name>/context.md` and `agents/*/<name>/context.md` (case-insensitive match on directory name)
-2. If not found, say so and suggest `/agent list`
+2. If not found, say so and suggest `/agents:start list`
 3. If found, execute the **Agent Startup Sequence** below
 4. After startup, handle the remaining arguments as the agent would:
    - If remaining args are `close` or `end` or `wrap up` → execute **Session End Protocol** (defined in `agents/CONVENTIONS.md` § Session End Protocol)
@@ -103,15 +103,15 @@ Heading: `# Next Best Action — <today's date>` (no hardcoded project name — 
 ### No arguments
 Show a brief help message:
 ```
-/agent <name>          — activate an agent
-/agent <name> <topic>  — activate and work on a topic
-/agent list            — list all agents
-/agent list <scope>    — list agents in a scope
-/agent list all        — include retired agents
-/agent status          — live status board (roles, missions, freshness)
-/agent status <scope>  — status board for one scope
-/agent next            — the single next best action (which agent, why)
-/agent next <scope>    — next best action within one scope
+/agents:start <name>          — activate an agent
+/agents:start <name> <topic>  — activate and work on a topic
+/agents:start list            — list all agents
+/agents:start list <scope>    — list agents in a scope
+/agents:start list all        — include retired agents
+/agents:start status          — live status board (roles, missions, freshness)
+/agents:start status <scope>  — status board for one scope
+/agents:start next            — the single next best action (which agent, why)
+/agents:start next <scope>    — next best action within one scope
 ```
 
 ## Agent Startup Sequence

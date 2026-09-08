@@ -171,7 +171,7 @@ func componentChoices(prompted componentState) []huh.Option[string] {
 	choices := make([]huh.Option[string], 0, 3)
 	if prompted.skills {
 		choices = append(choices,
-			huh.NewOption("Claude Code skills  /agent and /create-agent", "skills"),
+			huh.NewOption("Claude Code skills  /start and /new", "skills"),
 		)
 	}
 	if prompted.workspace {
@@ -351,8 +351,8 @@ func (u *UI) ShowSuccess(plan *installer.InstallPlan, result installer.ApplyResu
 	fmt.Fprintln(u.out, "Next steps")
 	fmt.Fprintf(u.out, "  1. cd %s\n", plan.Options.Target)
 	if plan.Options.InstallSkills {
-		fmt.Fprintln(u.out, "  2. Run /create-agent to build your first agent")
-		fmt.Fprintln(u.out, "  3. Run /agent <name> to activate it")
+		fmt.Fprintln(u.out, "  2. Run /new to build your first agent")
+		fmt.Fprintln(u.out, "  3. Run /start <name> to activate it")
 	} else {
 		fmt.Fprintln(u.out, "  2. Install the optional skills when you are ready")
 	}

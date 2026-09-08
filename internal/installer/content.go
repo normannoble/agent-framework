@@ -152,9 +152,9 @@ Persistent AI collaborators with calibrated autonomy. See ` + "`PHILOSOPHY.md`" 
 
 | Name | Role |
 |------|------|
-| *(use ` + "`/create-agent`" + ` to add your first agent)* | |
+| *(use ` + "`/new`" + ` to add your first agent)* | |
 
-Invoke with ` + "`/agent <name>`" + `. List with ` + "`/agent list`" + `.
+Invoke with ` + "`/start <name>`" + `. List with ` + "`/start list`" + `.
 ` + ClaudeEnd + "\n"
 
 	ManifestPath = ".agent-framework/install.json"
@@ -167,8 +167,8 @@ type skillPaths struct {
 }
 
 var skills = []skillPaths{
-	{Name: "agent", Canonical: ".claude/skills/agent/SKILL.md", Mirror: "agents/skills/agent/SKILL.md"},
-	{Name: "create-agent", Canonical: ".claude/skills/create-agent/SKILL.md", Mirror: "agents/skills/create-agent/SKILL.md"},
+	{Name: "start", Canonical: ".claude/skills/start/SKILL.md", Mirror: "agents/skills/start/SKILL.md"},
+	{Name: "new", Canonical: ".claude/skills/new/SKILL.md", Mirror: "agents/skills/new/SKILL.md"},
 }
 
 var markerPattern = regexp.MustCompile(`\{\{[A-Z_]+\}\}`)
