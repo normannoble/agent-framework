@@ -152,9 +152,9 @@ Persistent AI collaborators with calibrated autonomy. See ` + "`PHILOSOPHY.md`" 
 
 | Name | Role |
 |------|------|
-| *(use ` + "`/new`" + ` to add your first agent)* | |
+| *(use ` + "`/agents:new`" + ` to add your first agent)* | |
 
-Invoke with ` + "`/start <name>`" + `. List with ` + "`/start list`" + `.
+Invoke with ` + "`/agents:start <name>`" + `. List with ` + "`/agents:start list`" + `.
 ` + ClaudeEnd + "\n"
 
 	ManifestPath = ".agent-framework/install.json"
@@ -166,9 +166,18 @@ type skillPaths struct {
 	Mirror    string
 }
 
+// PluginDir is the in-repo plugin folder. Any folder under .claude/skills/ that
+// carries .claude-plugin/plugin.json is loaded by Claude Code as a project
+// plugin named "agents@skills-dir", so its skills are namespaced /agents:start
+// and /agents:new — the same commands the marketplace plugin provides.
+const PluginDir = ".claude/skills/agents"
+
+// PluginManifestPath is where the copied plugin manifest lands.
+const PluginManifestPath = PluginDir + "/.claude-plugin/plugin.json"
+
 var skills = []skillPaths{
-	{Name: "start", Canonical: ".claude/skills/start/SKILL.md", Mirror: "agents/skills/start/SKILL.md"},
-	{Name: "new", Canonical: ".claude/skills/new/SKILL.md", Mirror: "agents/skills/new/SKILL.md"},
+	{Name: "start", Canonical: PluginDir + "/skills/start/SKILL.md", Mirror: "agents/skills/start/SKILL.md"},
+	{Name: "new", Canonical: PluginDir + "/skills/new/SKILL.md", Mirror: "agents/skills/new/SKILL.md"},
 }
 
 var markerPattern = regexp.MustCompile(`\{\{[A-Z_]+\}\}`)

@@ -5,7 +5,7 @@ import "embed"
 // Assets contains the framework documents, templates, and Claude Code skills
 // compiled into every release binary.
 //
-//go:embed PHILOSOPHY.md template skills
+//go:embed PHILOSOPHY.md template skills .claude-plugin/plugin.json
 var Assets embed.FS
 
 // Version is the public installer version. Release builds replace it with the

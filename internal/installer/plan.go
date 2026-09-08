@@ -425,16 +425,23 @@ func BuildPlan(options InstallOptions) (*InstallPlan, error) {
 
 	directoryPaths := []string{"agents", "agents/tools", "agents/reference", "agents/skills"}
 	if options.InstallSkills {
+		manifest, err := ReadAsset(".claude-plugin/plugin.json")
+		if err != nil {
+			return nil, err
+		}
+		if err := add(PluginManifestPath, manifest, "agents plugin manifest", "skill:manifest", false, true, false); err != nil {
+			return nil, err
+		}
 		for _, skill := range skills {
 			content, err := RenderAsset(fmt.Sprintf("skills/%s/SKILL.md", skill.Name), options)
 			if err != nil {
 				return nil, err
 			}
 			group := "skill:" + skill.Name
-			if err := add(skill.Canonical, content, "/"+skill.Name+" skill", group, false, true, false); err != nil {
+			if err := add(skill.Canonical, content, "/agents:"+skill.Name+" skill", group, false, true, false); err != nil {
 				return nil, err
 			}
-			if err := add(skill.Mirror, content, "/"+skill.Name+" browsing mirror", group, false, true, false); err != nil {
+			if err := add(skill.Mirror, content, "/agents:"+skill.Name+" browsing mirror", group, false, true, false); err != nil {
 				return nil, err
 			}
 		}

@@ -166,9 +166,9 @@ The framework installs two layers of conventions and the runtime skills:
 
 - **`skills/start/SKILL.md`** — Router skill that activates agents (`/agents:start <name>`)
 - **`skills/new/SKILL.md`** — Builder skill for interactive agent creation (`/agents:new`)
-- **`skills/init/SKILL.md`** — Workspace setup (`/agents:init`; plugin mode only, the installer does this job in copied mode)
+- **`skills/init/SKILL.md`** — Workspace setup (`/agents:init`; marketplace plugin only — the installer does this job in copied mode)
 
-In plugin mode the skills come from the plugin and are namespaced (`/agents:start`, `/agents:new`, `/agents:init`). In copied mode the installer puts `start` and `new` under `.claude/skills/`, so they are `/start` and `/new`, with browsing copies synced to `agents/skills/`.
+In plugin mode the skills come from the plugin and are namespaced (`/agents:start`, `/agents:new`, `/agents:init`). In copied mode the installer writes a small in-repo plugin at `.claude/skills/agents/` (manifest plus the `start` and `new` skills). Claude Code loads it as `agents@skills-dir` once the folder is trusted, so the commands are the same `/agents:start` and `/agents:new`. Browsing copies are synced to `agents/skills/`. Do not also install the marketplace plugin in that repo, or both will answer to the same names.
 
 The master conventions load a lean core at every agent start. Long procedures (session end, memory consolidation, tooling admin, playbook format, and so on) live in `template/agents/reference/` and are read only when needed.
 
@@ -296,11 +296,12 @@ your-repo/
 │       │   └── sessions/
 │       └── playbooks/
 └── .claude/
-    └── skills/             # Copied mode only (plugin mode has none here)
-        ├── start/
-        │   └── SKILL.md
-        └── new/
-            └── SKILL.md
+    └── skills/
+        └── agents/         # Copied mode only: an in-repo plugin (agents@skills-dir)
+            ├── .claude-plugin/plugin.json
+            └── skills/
+                ├── start/SKILL.md
+                └── new/SKILL.md
 ```
 
 Lifecycle flows connect the areas: thinking → work (when ideas become active), thinking → knowledge (when notes crystallize), work → knowledge (when insights emerge), work → outputs (when artifacts are produced).
@@ -344,13 +345,13 @@ Then restart Claude Code. The Go installer has its own release flow (below); a p
 
 ## Developing the framework without the plugin (symlinks)
 
-To see edits instantly without a release, symlink a checkout into your user skills folder. The commands then lose their `agents:` prefix (`/start`, `/new`, `/init`):
+To see edits instantly without a release, symlink the checkout itself into your user skills folder. The repo root already has the plugin layout, so it loads as `agents@skills-dir` with the same `/agents:start`, `/agents:new`, `/agents:init` commands:
 
 ```bash
-ln -s /path/to/agent-framework/skills/start ~/.claude/skills/start
-ln -s /path/to/agent-framework/skills/new ~/.claude/skills/new
-ln -s /path/to/agent-framework/skills/init ~/.claude/skills/init
+ln -s /path/to/agent-framework ~/.claude/skills/agents
 ```
+
+Uninstall the marketplace copy first (`claude plugin uninstall agents@normannoble`), or both will answer to the same names.
 
 In each workspace, set `extends:` in `agents/CONVENTIONS.md` to the absolute path of `template/agents/CONVENTIONS.md` instead of `plugin`.
 
@@ -364,7 +365,7 @@ The `/agents:start` skill includes tool permissions in its frontmatter:
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash(date), Bash(ls), AskUserQuestion
 ```
 
-Edit `skills/start/SKILL.md` (or the copied `.claude/skills/start/SKILL.md`) to match your toolchain. If your agents need database access, API calls, or CLI tools, add the relevant permissions here.
+Edit `skills/start/SKILL.md` (or the copied `.claude/skills/agents/skills/start/SKILL.md`) to match your toolchain. If your agents need database access, API calls, or CLI tools, add the relevant permissions here.
 
 ### Adding Tools
 

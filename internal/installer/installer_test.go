@@ -192,8 +192,9 @@ func TestBuildPlanPerformsNoWrites(t *testing.T) {
 		"CONVENTIONS.md",
 		"agents/CONVENTIONS.md",
 		"agents/tools/INDEX.md",
-		".claude/skills/start/SKILL.md",
-		".claude/skills/new/SKILL.md",
+		".claude/skills/agents/.claude-plugin/plugin.json",
+		".claude/skills/agents/skills/start/SKILL.md",
+		".claude/skills/agents/skills/new/SKILL.md",
 	} {
 		findPlannedFile(t, plan, required)
 	}
@@ -207,8 +208,8 @@ func TestApplyInstallsExpectedFilesAndSkillMirrors(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(result.Written) != 21 {
-		t.Fatalf("written = %d, want 21: %v", len(result.Written), result.Written)
+	if len(result.Written) != 22 {
+		t.Fatalf("written = %d, want 22: %v", len(result.Written), result.Written)
 	}
 	philosophy, _ := ReadAsset("PHILOSOPHY.md")
 	if !bytes.Equal(readFile(t, filepath.Join(target, "PHILOSOPHY.md")), philosophy) {
@@ -218,7 +219,7 @@ func TestApplyInstallsExpectedFilesAndSkillMirrors(t *testing.T) {
 		t.Fatal("naming profile was not rendered")
 	}
 	for _, skill := range []string{"start", "new"} {
-		canonical := readFile(t, filepath.Join(target, ".claude/skills", skill, "SKILL.md"))
+		canonical := readFile(t, filepath.Join(target, ".claude/skills/agents/skills", skill, "SKILL.md"))
 		mirror := readFile(t, filepath.Join(target, "agents/skills", skill, "SKILL.md"))
 		if !bytes.Equal(canonical, mirror) {
 			t.Fatalf("%s skill mirror differs", skill)
@@ -254,7 +255,7 @@ func TestIdenticalRerunIsTrueNoop(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(result.Written) != 0 || second.Counts()["unchanged"] != 21 {
+	if len(result.Written) != 0 || second.Counts()["unchanged"] != 22 {
 		t.Fatalf("rerun wrote %v, counts=%v", result.Written, second.Counts())
 	}
 	if !before.ModTime().Equal(after.ModTime()) {
@@ -352,7 +353,7 @@ func TestWorkspaceIndexesArePreserved(t *testing.T) {
 
 func TestKeptCanonicalSkillControlsMissingMirror(t *testing.T) {
 	target := gitRepo(t)
-	canonicalPath := filepath.Join(target, ".claude/skills/start/SKILL.md")
+	canonicalPath := filepath.Join(target, ".claude/skills/agents/skills/start/SKILL.md")
 	writeFile(t, canonicalPath, "custom agent skill\n")
 	options := testOptions(target)
 	options.CreateWorkspace = false
@@ -365,7 +366,7 @@ func TestKeptCanonicalSkillControlsMissingMirror(t *testing.T) {
 	if !bytes.Equal(canonical, mirror) {
 		t.Fatal("missing mirror did not copy the kept canonical skill")
 	}
-	if _, err := os.Stat(filepath.Join(target, ".claude/skills/new/SKILL.md")); err != nil {
+	if _, err := os.Stat(filepath.Join(target, ".claude/skills/agents/skills/new/SKILL.md")); err != nil {
 		t.Fatal("missing second skill was not added")
 	}
 }

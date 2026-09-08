@@ -215,7 +215,7 @@ The file template (five level sections plus a dated changelog) is in `reference/
 
 ## Invocation
 
-All agents are invoked through the `/agents:start` router (from the `agents` plugin; `/start` in copied mode):
+All agents are invoked through the `/agents:start` router (from the `agents` plugin — installed from the marketplace, or copied into `.claude/skills/agents/` by the installer):
 
 ```
 /agents:start <name>          — activate an agent (status check)
