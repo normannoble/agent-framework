@@ -60,7 +60,7 @@ Always name the **single biggest file** and its share. That is the fix.
 - ❌ any of these missing: `role.md`, `soul.md`, `name.md`, `autonomy.md`, `tools.md`, `actions.md`, `context.md`, `MEMORY.md`, `memory/standing/`, `memory/sessions/`.
 - ❌ a path under `## Startup Context` in `context.md` that does not exist.
 - ⚠️ `memory/scheduled/inbox.md` exists and has `UNPROCESSED` entries (count them).
-- ⚠️ `playbooks/` exists but is empty, or a playbook has no `trigger` in its frontmatter.
+- ⚠️ a playbook (`playbooks/*.md`) has no `## Trigger` section. ℹ️ `playbooks/` is empty (normal for a new agent; mention once, no fix needed).
 - ℹ️ active agent whose `Last reviewed` is > 60 days old: suggest retiring it (`status: retired` in `context.md`).
 
 ### E. Workspace level (once per report)
