@@ -11,7 +11,7 @@ Build a new agent following the conventions in `agents/CONVENTIONS.md`.
 
 ## Startup
 
-1. Read `agents/CONVENTIONS.md` to understand the template. If its frontmatter has `extends: <path>`, read that master first (if the value is `plugin`, resolve it with `ls "${CLAUDE_PLUGIN_ROOT}/template/agents/CONVENTIONS.md"`); the workspace file wins on conflict
+1. Read `agents/CONVENTIONS.md` to understand the template. If its frontmatter has `extends: <path>`, read that master first (if the value is `plugin`, resolve it with `ls "${CLAUDE_PLUGIN_ROOT}/template/agents/CONVENTIONS.md"`, or glob `~/.claude/plugins/cache/*/agent-framework/*/template/agents/CONVENTIONS.md` if the variable is empty); the workspace file wins on conflict
 2. Read the reserved names list from CONVENTIONS.md to avoid conflicts
 3. **Detect workspace layout:**
    - Glob for `agents/*/context.md` (single-domain: agents are direct children of `agents/`)

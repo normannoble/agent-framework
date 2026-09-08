@@ -1,6 +1,6 @@
 {
   "name": "agent-framework",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Persistent AI collaboration partners in Claude Code — named agents with calibrated autonomy, memory, action trackers, and playbooks. Provides /agent-framework:agent (router) and /agent-framework:create-agent (builder).",
   "author": { "name": "Norman Noble", "email": "normannoble@outlook.com" },
   "homepage": "https://github.com/normannoble/agent-framework",
