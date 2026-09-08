@@ -11,7 +11,7 @@ This file can be used two ways:
 
   ```yaml
   ---
-  extends: /path/to/agent-framework/template/agents/CONVENTIONS.md
+  extends: plugin   # or an absolute path to a checkout of template/agents/CONVENTIONS.md
   principal: <name>
   naming: <tradition>            # e.g. Roman cognomina
   naming-examples: <comma list>  # the pool
@@ -19,7 +19,7 @@ This file can be used two ways:
   ---
   ```
 
-  The router reads the master first, then the workspace file. **The workspace file wins on conflict.** It should contain only rules that differ from, or add to, the master. Where the master says `{{PRINCIPAL}}`, `{{NAMING_TRADITION}}`, `{{NAMING_EXAMPLES}}`, read the value from the workspace frontmatter.
+  `extends: plugin` means the master shipped inside the installed plugin (`${CLAUDE_PLUGIN_ROOT}/template/agents/CONVENTIONS.md`). An absolute path works too, for a symlinked checkout. The router reads the master first, then the workspace file. **The workspace file wins on conflict.** It should contain only rules that differ from, or add to, the master. Where the master says `{{PRINCIPAL}}`, `{{NAMING_TRADITION}}`, `{{NAMING_EXAMPLES}}`, read the value from the workspace frontmatter.
 
 Shared mode means one fix in the master reaches every workspace. Prefer it when one person runs several workspaces.
 

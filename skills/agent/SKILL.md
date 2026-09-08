@@ -20,7 +20,7 @@ To detect: glob for both `agents/*/context.md` and `agents/*/*/context.md`. Use 
 
 **Retired agents.** A `context.md` whose frontmatter has `status: retired` is hidden from `list`, `status`, and `next` unless the argument `all` is given. Activating a retired agent by name still works — say "<name> is retired since <date>" first, then continue.
 
-**Conventions inheritance.** Wherever this skill says "read `agents/CONVENTIONS.md`": read the workspace file; if its frontmatter has `extends: <path>`, read that master file **first**, then the workspace file. The workspace file wins on conflict. Placeholders in the master (`{{PRINCIPAL}}`, `{{NAMING_TRADITION}}`, `{{NAMING_EXAMPLES}}`) take their values from the workspace file's frontmatter (`principal`, `naming`, `naming-examples`).
+**Conventions inheritance.** Wherever this skill says "read `agents/CONVENTIONS.md`": read the workspace file; if its frontmatter has `extends: <path>`, read that master file **first**, then the workspace file. If the value is the word `plugin`, the master is the copy shipped with this plugin: run `ls "${CLAUDE_PLUGIN_ROOT}/template/agents/CONVENTIONS.md"` to resolve the path, then read it. The workspace file wins on conflict. Placeholders in the master (`{{PRINCIPAL}}`, `{{NAMING_TRADITION}}`, `{{NAMING_EXAMPLES}}`) take their values from the workspace file's frontmatter (`principal`, `naming`, `naming-examples`).
 
 ## Routing
 

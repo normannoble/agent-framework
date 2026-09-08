@@ -1,0 +1,10 @@
+{
+  "name": "agent-framework",
+  "version": "1.0.0",
+  "description": "Persistent AI collaboration partners in Claude Code — named agents with calibrated autonomy, memory, action trackers, and playbooks. Provides /agent-framework:agent (router) and /agent-framework:create-agent (builder).",
+  "author": { "name": "Norman Noble", "email": "normannoble@outlook.com" },
+  "homepage": "https://github.com/normannoble/agent-framework",
+  "repository": "https://github.com/normannoble/agent-framework",
+  "license": "MIT",
+  "keywords": ["agents", "autonomy", "memory", "workspace", "obsidian"]
+}

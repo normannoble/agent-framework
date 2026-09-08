@@ -14,6 +14,42 @@ See [PHILOSOPHY.md](PHILOSOPHY.md) for the full position.
 
 ## Quick Start
 
+### Install as a plugin (recommended)
+
+Inside Claude Code:
+
+```
+/plugin marketplace add normannoble/agent-framework
+/plugin install agent-framework@normannoble
+```
+
+Or from the shell:
+
+```bash
+claude plugin marketplace add normannoble/agent-framework
+claude plugin install agent-framework@normannoble
+```
+
+This gives every project two skills: `/agent-framework:agent` (the router) and `/agent-framework:create-agent` (the builder). Update later with `claude plugin update agent-framework@normannoble`.
+
+Then, in the workspace where you want agents, create `agents/CONVENTIONS.md` with this frontmatter and nothing else to start:
+
+```yaml
+---
+extends: plugin
+principal: <your name>
+naming: Roman cognomina
+naming-examples: Cato, Varro, Seneca, Corvus, Regulus, Cassia, Livia, Marius
+reserved: []
+---
+```
+
+The full conventions ship inside the plugin; this short file holds only your overrides. Run `/agent-framework:create-agent` to build your first agent.
+
+### Install by copying (the installer)
+
+If you would rather have every file inside your repo, with short `/agent` and `/create-agent` commands:
+
 ```bash
 curl -fsSL https://agent-framework.sh/install.sh | sh
 ```
@@ -125,7 +161,7 @@ The framework installs two layers of conventions and the runtime skills:
 - **`.claude/skills/agent/SKILL.md`** — Router skill that activates agents (`/agent <name>`)
 - **`.claude/skills/create-agent/SKILL.md`** — Builder skill for interactive agent creation (`/create-agent`)
 
-Skills are installed **project-scoped** (`.claude/skills/`), with browsing copies synced to `agents/skills/`.
+In plugin mode the skills come from the plugin and are namespaced (`/agent-framework:agent`). In copied mode they are installed **project-scoped** (`.claude/skills/`) as `/agent` and `/create-agent`, with browsing copies synced to `agents/skills/`.
 
 ## How It Works
 
@@ -286,9 +322,9 @@ In your target repository:
 
 This walks you through 7 phases: scope, role definition, autonomy levels, soul/personality, naming, file creation, and verification. No files are created until phase 6 — the first five phases are pure design conversation.
 
-## Shared Install (one framework, many workspaces)
+## Shared Install without the plugin (symlinks)
 
-If you run several workspaces, don't copy the skills and conventions into each one. Instead:
+If you develop the framework itself and want edits to show up instantly under the short names `/agent` and `/create-agent`, skip the plugin and symlink a checkout:
 
 1. Symlink the skills into your user-level skills folder so every project sees them:
    ```bash
@@ -296,7 +332,7 @@ If you run several workspaces, don't copy the skills and conventions into each o
    ln -s /path/to/agent-framework/skills/create-agent ~/.claude/skills/create-agent
    ```
 2. Keep `template/agents/CONVENTIONS.md` as the single master.
-3. In each workspace, make `agents/CONVENTIONS.md` a short file whose frontmatter says `extends: /path/to/agent-framework/template/agents/CONVENTIONS.md` plus `principal`, `naming`, `naming-examples`, and `reserved`. Put only workspace-specific rules below the frontmatter. The workspace file wins on conflict.
+3. In each workspace, make `agents/CONVENTIONS.md` a short file whose frontmatter says `extends: /path/to/agent-framework/template/agents/CONVENTIONS.md` (an absolute path here, since there is no plugin root) plus `principal`, `naming`, `naming-examples`, and `reserved`. Put only workspace-specific rules below the frontmatter. The workspace file wins on conflict.
 
 The router reads the master first, then the workspace file. One fix in the master reaches every workspace. See the **Inheritance** section at the top of `template/agents/CONVENTIONS.md`.
 
