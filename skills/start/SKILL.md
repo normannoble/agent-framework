@@ -1,7 +1,7 @@
 ---
 description: Start a workspace agent by name and become it for the session. Use /agents:start <name>, /agents:start <name> <topic>, /agents:start <name> close, or /agents:start <name> peer <file> (peer session, used by /agents:ask). To list agents use /agents:list; for the org board /agents:status; for the one next move /agents:next.
 disable-model-invocation: true
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash(date), Bash(echo:*), Bash(ls), Bash(herdr agent rename:*), Bash(herdr pane rename:*), Bash(herdr agent list:*), AskUserQuestion
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash(date), Bash(echo:*), Bash(ls), Bash(herdr agent rename:*), Bash(herdr pane rename:*), Bash(herdr tab rename:*), Bash(herdr agent list:*), AskUserQuestion
 argument-hint: <name> [topic | close | peer <file>]
 ---
 
@@ -60,8 +60,8 @@ Show a brief help message:
 
 Once the agent directory is identified (e.g., `agents/Sigrid/` or `agents/Acme/Sigrid/`):
 
-1. Run `date` to establish the current date, time, and day of week. Then run `echo "HERDR_ENV=$HERDR_ENV PANE=$HERDR_PANE_ID"` — you cannot see environment variables without this; always run it
-   - **Herdr** (the echo shows `HERDR_ENV=1`): read `title:` from the agent's `context.md`, then run `herdr agent rename "$HERDR_PANE_ID" <name lowercased>` and `herdr pane rename "$HERDR_PANE_ID" "<Name> - <title>"`. Ignore errors (e.g. the name is taken by another live pane — then use `<name>-2` and mention it once). Say "Pane: <Name> - <title>" in one line. If the echo shows `HERDR_ENV=` (empty), skip this line silently
+1. Run `date` to establish the current date, time, and day of week. Then run `echo "HERDR_ENV=$HERDR_ENV PANE=$HERDR_PANE_ID TAB=$HERDR_TAB_ID"` — you cannot see environment variables without this; always run it
+   - **Herdr** (the echo shows `HERDR_ENV=1`): read `title:` from the agent's `context.md`, then run `herdr agent rename "$HERDR_PANE_ID" <name lowercased>` and `herdr pane rename "$HERDR_PANE_ID" "<Name> - <title>"`, then `herdr tab rename "$HERDR_TAB_ID" "<Name> - <title>"` (human sessions only; a peer session never renames the tab, it sits in the caller's tab). Ignore errors (e.g. the name is taken by another live pane — then use `<name>-2` and mention it once). Say "Pane: <Name> - <title>" in one line. If the echo shows `HERDR_ENV=` (empty), skip this line silently
 2. Read `agents/CONVENTIONS.md` (master first if it `extends` one — see Conventions inheritance above)
 3. Read `soul.md`
 4. Read `name.md`
@@ -84,7 +84,7 @@ All paths are relative to the agent directory unless prefixed with `agents/` or 
 
 ## Peer Session (`/agents:start <name> peer <file>`)
 
-Another agent asked for something. You are not in a conversation with the principal. Load the **trimmed** context: steps 1–11 and 13 above (skip the recent-2 session memories, the playbook trigger check, the inbox drain, the peer glance, and the hygiene check). Then read `${CLAUDE_PLUGIN_ROOT}/template/agents/reference/peer.md` § Three session types and follow it: read the request file, answer in its `## Reply` section at ceiling **L3**, set `status:` to `answered` (or `needs-principal` if anything exceeded L3, listing it under `Needs <principal>:`). Write nothing else: no session memory, no tracker edit, no commit, no email or messages. When the file is written, say `Reply written: <path>` and stop. The caller closes this pane.
+Another agent asked for something. You are not in a conversation with the principal. Load the **trimmed** context: steps 1–11 and 13 above (in step 1 the Herdr names are `<name>-peer` and `"<Name> - Peer"`, and do **not** rename the tab; skip the recent-2 session memories, the playbook trigger check, the inbox drain, the peer glance, and the hygiene check). Then read `${CLAUDE_PLUGIN_ROOT}/template/agents/reference/peer.md` § Three session types and follow it: read the request file, answer in its `## Reply` section at ceiling **L3**, set `status:` to `answered` (or `needs-principal` if anything exceeded L3, listing it under `Needs <principal>:`). Write nothing else: no session memory, no tracker edit, no commit, no email or messages. When the file is written, say `Reply written: <path>` and stop. The caller closes this pane.
 
 After loading, **you are that agent for the rest of this session.** Adopt the soul, follow the role's working mode, respect the scope boundaries, and follow the conventions from `agents/CONVENTIONS.md`. You are not the router anymore — you are the agent.
 

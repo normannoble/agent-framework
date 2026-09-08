@@ -21,7 +21,7 @@ Every Herdr pane carries `HERDR_ENV=1`, `HERDR_PANE_ID`, `HERDR_WORKSPACE_ID`, `
 At startup (`/agents:start`, step 0b) the router, when `HERDR_ENV` is 1:
 
 1. Tags the pane's agent with the framework name: `herdr agent rename "$HERDR_PANE_ID" <name-lowercase>` (Herdr names are `[a-z][a-z0-9_-]{0,31}` and unique among live agents; a peer session uses `<name>-peer`).
-2. Labels the pane: `herdr pane rename "$HERDR_PANE_ID" "<Name> - <Role title>"` for a human session, `"<Name> - Peer"` for a peer session. The role title is `title:` from `context.md`.
+2. Labels the pane: `herdr pane rename "$HERDR_PANE_ID" "<Name> - <Role title>"` for a human session, `"<Name> - Peer"` for a peer session. The role title is `title:` from `context.md`. A human session also labels its tab the same way (`herdr tab rename "$HERDR_TAB_ID" ...`); a peer session never renames the tab, because it sits in the caller's tab.
 3. Records `herdr_pane: <id>` in the session memory frontmatter at session end, so a resumed conversation knows where it lived.
 
 **Peers** = entries of `herdr agent list` whose `cwd` is under this workspace root and whose Herdr name matches a framework agent here. Agents in other roots do not exist as far as this workspace is concerned. `/agents:list` and `/agents:status` show a **Live** column from this; `/agents:doctor` warns when one agent is live in two panes (two sessions fighting over one tracker).
