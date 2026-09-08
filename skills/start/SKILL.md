@@ -73,6 +73,7 @@ Once the agent directory is identified (e.g., `agents/Sigrid/` or `agents/Acme/S
 14. Playbook index — glob `playbooks/*.md`, read only frontmatter and first paragraph of each (not full steps)
 15. Trigger check — evaluate each playbook's trigger against today's date, day of week, and session context. Flag any that should execute this session
 16. Drain the scheduled-run inbox — if `memory/scheduled/inbox.md` exists, read it. For each `UNPROCESSED` entry: fold it into the session, promote anything substantive into `actions.md` or a memory entry, then flip it to `PROCESSED`. Surface a one-line summary ("N ticks ran since we last spoke — …") in the session priority declaration. Absent file = no-op. See `agents/CONVENTIONS.md` § Session Types
+17. Hygiene check — from what you just read, note: number of files in `memory/standing/` (limit 5), number of files in `memory/sessions/` (limit 10), size of `actions.md` (limit 20 KB), and whether the `Last reviewed:` line is longer than one short line. If any limit is broken, print **one line** before the priority declaration, e.g. `⚠️ Hygiene: standing memory has 9 files (limit 5) — run /agents:doctor <name>, then /agents:start <name> consolidate memory.` If all pass, say nothing.
 
 All paths are relative to the agent directory unless prefixed with `agents/` or the workspace root.
 

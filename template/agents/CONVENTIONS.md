@@ -4,7 +4,15 @@ How to build and structure agents in this workspace.
 
 ## Inheritance
 
-This master is shared. A workspace's `agents/CONVENTIONS.md` carries frontmatter (`extends: plugin`, `principal`, `naming`, `naming-examples`, `reserved`) and only the rules that differ from, or add to, this file. **The workspace file wins on conflict.** Where this file says `{{PRINCIPAL}}`, `{{NAMING_TRADITION}}`, or `{{NAMING_EXAMPLES}}`, use the workspace frontmatter values. In copied mode (installer) the placeholders are already substituted.
+This master is shared. A workspace's `agents/CONVENTIONS.md` carries frontmatter (`extends: plugin`, `principal`, `naming`, `naming-examples`, `reserved`, and the optional switches below) and only the rules that differ from, or add to, this file. **The workspace file wins on conflict.** Where this file says `{{PRINCIPAL}}`, `{{NAMING_TRADITION}}`, or `{{NAMING_EXAMPLES}}`, use the workspace frontmatter values. In copied mode (installer) the placeholders are already substituted.
+
+**Optional frontmatter switches** (so common differences need no prose override):
+
+| Key | Default | Effect |
+|-----|---------|--------|
+| `ticket-column` | `Ticket` | Name of the issue-tracker column in `actions.md` (e.g. `Linear`, `Jira`). The ticket sync rules in § actions.md apply to that tracker. |
+| `inbound` | `none` | Channel checked in step 2 of the Session Priority Declaration (`email`, `slack`, `none`). The triage command lives in each agent's `tools.md`. |
+| `scheduler` | `none` | `launchd` or `cron` if the workspace runs the shared scheduler (see § Session Types). |
 
 ## Reference files (read on demand, never at startup)
 
@@ -115,11 +123,11 @@ Autonomy levels for tooling actions are defined in `autonomy.md`, not here. `too
 ### actions.md
 
 Single standing file — the agent's running to-do list. Always current, updated every session close. Structure:
-- "Last reviewed" date at the top
+- `Last reviewed: YYYY-MM-DD` at the top — **the date only, one line**. Session narrative never goes here; it goes in `memory/sessions/`. `/agents:doctor` flags this line when it exceeds 600 characters.
 - Open table: #, Action, Ticket, Owner, Priority, Due/Target, Status, Since
 - Completed table: #, Action, Ticket, Owner, Completed date
 
-The `Ticket` column is optional — contains the issue tracker ID when the action has a corresponding ticket. When present:
+The `Ticket` column is optional — contains the issue tracker ID when the action has a corresponding ticket. Its header is the workspace's `ticket-column` frontmatter value (default `Ticket`). When present:
 - At session close, sync status both ways (update tracker state to match action status, and vice versa)
 - During session priority declaration, check linked tickets for state changes since last session
 - Not all actions need a ticket — agent operational items (memory hygiene, follow-ups, session carryover) stay in actions.md only
@@ -264,7 +272,7 @@ Not every session is an interactive pairing with {{PRINCIPAL}}. Automated schedu
 
 **The scheduled-run inbox** (`memory/scheduled/inbox.md`): a rolling, append-only ledger. Ticks append `UNPROCESSED` entries. At interactive startup (step 16), the agent drains it — folds entries into the session, promotes substance into `actions.md` or a memory entry, then flips them to `PROCESSED`. Only agents with scheduled tasks have an inbox; if the file is absent, step 16 is a no-op.
 
-A scheduler is any unattended runner (cron, launchd, a cloud routine) that invokes `claude -p` against a task register. It must: cap each task with an autonomy ceiling, cap tool calls, never commit or push, never use the `/agents:start` router, and log every run. A reference implementation lives in the Mindvalley workspace under `agents/scheduler/` (`prompt.md`, `policies.md`, `scheduled-tasks.md`).
+A scheduler is any unattended runner (cron, launchd, a cloud routine) that invokes `claude -p` against a task register. It must: cap each task with an autonomy ceiling, cap tool calls, never commit or push, never use the `/agents:start` router, and log every run. The shared implementation ships with the plugin under `${CLAUDE_PLUGIN_ROOT}/template/agents/scheduler/` (`prompt.md`, `policies.md`, `scheduled-tasks.md` template, `install-launchd.sh`, `setup.sh` for cron). To adopt it: copy that folder to `agents/scheduler/`, replace `{{PRINCIPAL}}` in the copies with the principal's name, copy the register template to `agents/scheduled-tasks.md`, set `scheduler: launchd` (or `cron`) in the workspace frontmatter, and run the installer script from the workspace root. Ticks read the copy in the workspace, so re-copy after a plugin update that changes it.
 
 ## Session Priority Declaration
 
@@ -272,7 +280,7 @@ Agents have a natural tendency toward recency bias — prioritising whatever was
 
 At the start of every session (after loading context), the agent:
 1. Reviews `actions.md` and identifies the top priorities (P1 items first, then P2)
-2. Checks for inbound communications (see `tools.md` for triage commands, if configured). If messages exist, factor them into the priority assessment — a message from a stakeholder may elevate or introduce a priority. If no inbound channel is configured or the inbox is empty, move on silently.
+2. Checks for inbound communications on the workspace's `inbound` channel (frontmatter; see `tools.md` for the triage command). If messages exist, factor them into the priority assessment — a message from a stakeholder may elevate or introduce a priority. If no inbound channel is configured or the inbox is empty, move on silently.
 3. Reconciles in-flight {{PRINCIPAL}}-owned items. If `actions.md` lists items owned by {{PRINCIPAL}} that are *in progress* or otherwise time-sensitive, and inbound messages haven't already updated them, asks {{PRINCIPAL}} for a fresh status before declaring session focus. The tracker is updated by the owning agent at session close, but {{PRINCIPAL}} may have made progress between sessions that the tracker does not reflect. Reconciling first prevents stale-state-driven session focus.
 4. Includes any playbooks flagged by the trigger check (startup step 15) — cadenced playbooks that are due this session
 5. Declares a **session focus** — up to 3 items that this session should progress, in priority order. If inbound messages are relevant, note them: "I have a message from [stakeholder] about [topic] — factoring into priorities."

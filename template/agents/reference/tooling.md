@@ -34,12 +34,13 @@ Suggested defaults for new agents:
 
 ### Post-Creation Admin Checklist
 
-After `/agents:new` completes the code side, external tool setup may be required. Customise this checklist to match your tool stack:
+After `/agents:new` completes the code side, external tool setup may be required. Skip any step for a tool the workspace does not use; add workspace-specific steps in the workspace `agents/CONVENTIONS.md`.
 
-1. **Communication aliases** — set up the agent's email alias or messaging identity
-2. **Send-as configuration** — configure the agent to send from its own identity
-3. **Issue tracker labels** — add agent-specific labels for ownership tracking
-4. **Version control access** — if the agent needs its own account or permissions
+1. **Email alias** — Google Workspace Admin console → Directory → Users → the shared agents account → Add alternate email `<name>@<domain>`
+2. **Send-as** — sign into Gmail as the shared agents account → Settings → Accounts → Send mail as → add the alias with the agent's display name
+3. **Issue tracker label** — e.g. Linear Settings → Labels → add `<name>` under the Agent group
+4. **Version control** (engineering agents only) — create the account, add it as an org collaborator, run `gh auth login`
+5. **Record the identity** in the agent's `tools.md` (alias, display name)
 
 ### Adding a New Tool
 

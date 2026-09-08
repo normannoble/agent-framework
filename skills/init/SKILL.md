@@ -45,6 +45,9 @@ naming: <tradition name>
 naming-description: <description from the chosen tradition>
 naming-examples: <pool>
 reserved: []
+ticket-column: Ticket
+inbound: none
+scheduler: none
 ---
 
 # Agent Conventions — <repo folder name>

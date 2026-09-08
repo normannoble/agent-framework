@@ -47,6 +47,11 @@ resume: claude --resume ${CLAUDE_SESSION_ID}
 ```
 Include topics discussed, decisions made, and open questions. Do NOT duplicate action items — reference `actions.md`.
 
+Never invent a `session_id`. If `${CLAUDE_SESSION_ID}` is empty, the ID is the filename (without `.jsonl`) of the active conversation file. Look it up from the workspace root:
+```bash
+find ~/.claude/projects/-$(pwd | tr '/' '-' | cut -c2-) -name "*.jsonl" -mmin -60 -not -path "*/subagents/*" | head -1 | xargs basename | sed 's/.jsonl//'
+```
+
 If the session produced durable rules or decisions, write a separate entry to `memory/standing/` and add it to the Standing section in MEMORY.md.
 
 ### Step 5: Update memory index
