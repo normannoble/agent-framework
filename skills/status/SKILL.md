@@ -1,7 +1,7 @@
 ---
 description: Live status board of the whole agent org — role, current focus, and freshness per agent, plus in-flight, blocked, and stale rollups. Use /agents:status or /agents:status <scope>.
 disable-model-invocation: true
-allowed-tools: Read, Glob, Grep, Bash(herdr agent list), Bash(date)
+allowed-tools: Read, Glob, Grep, Bash(echo:*), Bash(herdr agent list:*), Bash(date)
 argument-hint: [scope|all]
 ---
 
@@ -27,7 +27,7 @@ Glob for both `agents/*/context.md` (single-domain) and `agents/*/*/context.md` 
    | Agent | Role | Current focus | Updated |
    |-------|------|---------------|---------|
 
-   **Live column (Herdr only).** If `HERDR_ENV` is `1`, run `herdr agent list`, keep only entries whose `cwd` is under the current working directory and whose `name` matches an agent here (lowercase), and add a `Live` column with pane id and state (`w1:p3 idle`), `—` if none. Never show agents from other roots.
+   **Live column (Herdr only).** Run `echo "$HERDR_ENV"` (you cannot see env vars otherwise). If it prints `1`, run `herdr agent list`, keep only entries whose `cwd` is under the current working directory and whose `name` matches an agent here (lowercase), and add a `Live` column with pane id and state (`w1:p3 idle`), `—` if none. Never show agents from other roots.
 
    **Table formatting rules (so it always renders correctly):**
    - Keep every cell on a **single line** — summarise; never paste a multi-line action into a cell.

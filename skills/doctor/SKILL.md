@@ -1,7 +1,7 @@
 ---
 description: Health review of the agent workspace — startup cost per agent, tracker hygiene, memory bloat, staleness, missing files, conventions drift. Reports findings by severity and recommends the exact next commands. Read-only. Use /agents:doctor or /agents:doctor <name>.
 disable-model-invocation: true
-allowed-tools: Read, Glob, Grep, Bash(date), Bash(wc), Bash(ls), Bash(git status), Bash(git log), Bash(herdr agent list)
+allowed-tools: Read, Glob, Grep, Bash(date), Bash(wc), Bash(ls), Bash(git status), Bash(git log), Bash(echo:*), Bash(herdr agent list:*)
 argument-hint: [name|scope|all]
 ---
 
@@ -71,7 +71,7 @@ Always name the **single biggest file** and its share. That is the fix.
 - ⚠️ `agents/tools/INDEX.md` missing.
 - ⚠️ `CLAUDE.md` `## Agents` table lists an agent that is retired or missing, or omits an active one.
 - ℹ️ `git status --short agents/` shows uncommitted changes (list the count only).
-- ❌ (Herdr only, `HERDR_ENV` is `1`) `herdr agent list` shows the same agent name live in two or more panes whose `cwd` is under this root — two sessions share one tracker. Name the panes. Ignore other roots.
+- ❌ (Herdr only: run `echo "$HERDR_ENV"`; if `1`) `herdr agent list` shows the same agent name live in two or more panes whose `cwd` is under this root — two sessions share one tracker. Name the panes. Ignore other roots.
 
 ## Output
 

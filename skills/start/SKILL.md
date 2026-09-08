@@ -1,7 +1,7 @@
 ---
 description: Start a workspace agent by name and become it for the session. Use /agents:start <name>, /agents:start <name> <topic>, /agents:start <name> close, or /agents:start <name> peer <file> (peer session, used by /agents:ask). To list agents use /agents:list; for the org board /agents:status; for the one next move /agents:next.
 disable-model-invocation: true
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash(date), Bash(ls), Bash(herdr agent rename), Bash(herdr pane rename), Bash(herdr agent list), AskUserQuestion
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash(date), Bash(echo:*), Bash(ls), Bash(herdr agent rename:*), Bash(herdr pane rename:*), Bash(herdr agent list:*), AskUserQuestion
 argument-hint: <name> [topic | close | peer <file>]
 ---
 
@@ -60,8 +60,8 @@ Show a brief help message:
 
 Once the agent directory is identified (e.g., `agents/Sigrid/` or `agents/Acme/Sigrid/`):
 
-1. Run `date` to establish the current date, time, and day of week
-   - **Herdr** (`HERDR_ENV` is `1`): read `title:` from the agent's `context.md`, then run `herdr agent rename "$HERDR_PANE_ID" <name lowercased>` and `herdr pane rename "$HERDR_PANE_ID" "<Name> - <title>"`. Ignore errors (e.g. the name is taken by another live pane — then use `<name>-2` and mention it once). Outside Herdr skip this line
+1. Run `date` to establish the current date, time, and day of week. Then run `echo "HERDR_ENV=$HERDR_ENV PANE=$HERDR_PANE_ID"` — you cannot see environment variables without this; always run it
+   - **Herdr** (the echo shows `HERDR_ENV=1`): read `title:` from the agent's `context.md`, then run `herdr agent rename "$HERDR_PANE_ID" <name lowercased>` and `herdr pane rename "$HERDR_PANE_ID" "<Name> - <title>"`. Ignore errors (e.g. the name is taken by another live pane — then use `<name>-2` and mention it once). Say "Pane: <Name> - <title>" in one line. If the echo shows `HERDR_ENV=` (empty), skip this line silently
 2. Read `agents/CONVENTIONS.md` (master first if it `extends` one — see Conventions inheritance above)
 3. Read `soul.md`
 4. Read `name.md`

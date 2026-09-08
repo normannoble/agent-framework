@@ -1,7 +1,7 @@
 ---
 description: Ask another agent in this workspace for a review, a fact, or a draft. Opens a fresh Herdr pane, runs the target as a peer session, waits for its written reply, closes the pane. Same workspace only. Use /agents:ask <name> "<request>". Requires Herdr (HERDR_ENV=1).
 disable-model-invocation: true
-allowed-tools: Read, Write, Glob, Grep, Bash(date), Bash(pwd), Bash(mkdir), Bash(herdr agent list), Bash(herdr agent start), Bash(herdr agent prompt), Bash(herdr agent read), Bash(herdr agent get), Bash(herdr pane split), Bash(herdr pane rename), Bash(herdr pane layout), Bash(herdr pane close)
+allowed-tools: Read, Write, Glob, Grep, Bash(date), Bash(echo:*), Bash(pwd), Bash(mkdir:*), Bash(herdr agent list:*), Bash(herdr agent start:*), Bash(herdr agent prompt:*), Bash(herdr agent read:*), Bash(herdr agent get:*), Bash(herdr pane split:*), Bash(herdr pane rename:*), Bash(herdr pane layout:*), Bash(herdr pane close:*)
 argument-hint: <name> "<request>"
 ---
 
@@ -11,7 +11,7 @@ You ask one agent in this workspace to do one bounded thing for the agent you cu
 
 ## Preconditions
 
-1. `HERDR_ENV` must be `1` and `HERDR_PANE_ID` set. Otherwise say `Not inside Herdr — /agents:ask needs a Herdr pane.` and stop.
+1. Run `echo "$HERDR_ENV $HERDR_PANE_ID"` (you cannot see env vars otherwise). `HERDR_ENV` must be `1` and `HERDR_PANE_ID` set. Otherwise say `Not inside Herdr — /agents:ask needs a Herdr pane.` and stop.
 2. Workspace root = current working directory; it must contain `agents/`. Glob `agents/<name>/context.md` or `agents/*/<name>/context.md` (case-insensitive). Not found, or `status: retired` → say so, suggest `/agents:list`, stop. **Never** look outside this root and never mention agents from other roots.
 3. Caller = the agent currently active in this session, else `principal`.
 
