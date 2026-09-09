@@ -70,5 +70,6 @@ agents/<Name>/
 - **An agent is gone from `/agents:list`.** It is retired. `/agents:list all` shows it. `/agents:start <name>` still works.
 - **"the name agents is already taken by an installed plugin".** The repo has an in-repo copy of the plugin (copied mode) and the marketplace plugin is also installed. Keep one. Marketplace: `claude plugin uninstall agents@normannoble`. Or delete `.claude/skills/agents/`.
 - **Update the plugin:** `claude plugin marketplace update normannoble && claude plugin update agents@normannoble`, then restart.
+- **Use the agents from Codex, Gemini CLI, or OpenCode.** Clone the framework repo and run `bash harness/install.sh <codex|gemini|opencode> <workspace>`. Same agents, same files. Commands are `$agents-start <name>` in Codex, `/agents:start <name>` in Gemini, `/agents-start <name>` in OpenCode.
 
 Source and docs: https://github.com/normannoble/agent-framework

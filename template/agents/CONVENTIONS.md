@@ -14,10 +14,11 @@ This master is shared. A workspace's `agents/CONVENTIONS.md` carries frontmatter
 | `inbound` | `none` | Channel checked in step 2 of the Session Priority Declaration (`email`, `slack`, `none`). The triage command lives in each agent's `tools.md`. |
 | `scheduler` | `none` | `launchd` or `cron` if the workspace runs the shared scheduler (see § Session Types). |
 | `gap-notice` | `2h` | Idle gap after which the plugin's hook tells the agent how much time passed (`30m`, `2h`, `1d`, or `off`). See § Stale Sessions. |
+| `harness` | `claude` | The coding-agent CLI that runs unattended ticks and peer panes: `claude`, `codex`, `gemini`, or `opencode`. Interactive sessions work from any harness that has the framework commands installed (see § Invocation). |
 
 ## Reference files (read on demand, never at startup)
 
-Long procedures live beside this file in `reference/`. In plugin mode that is `${CLAUDE_PLUGIN_ROOT}/template/agents/reference/`; in copied mode it is `agents/reference/`.
+Long procedures live beside this file in `reference/`. In plugin mode that is `${CLAUDE_PLUGIN_ROOT}/template/agents/reference/`; on another harness it is `$AGENT_FRAMEWORK_ROOT/template/agents/reference/` (the framework root named by the wrapper skill or exported by `tick.sh`); in copied mode it is `agents/reference/`.
 
 | File | Read when |
 |------|-----------|
@@ -243,6 +244,17 @@ All agents are invoked through the `/agents:start` router (from the `agents` plu
 
 The router parses the agent name, finds the agent directory under `agents/<name>/`, executes the startup sequence, and becomes that agent for the session. Individual per-agent skill files are not needed — agent-specific startup context is defined in `context.md`.
 
+**Other harnesses.** The same skills run in Codex, Gemini CLI, and OpenCode through thin wrapper skills that point at the framework checkout (`harness/install.sh <harness>` in the framework repo writes them). Only the command spelling differs; `/agents:<cmd>` in this document means the matching form below.
+
+| Harness | Start an agent | Any command | Installed by |
+|---------|----------------|-------------|--------------|
+| Claude Code | `/agents:start <name>` | `/agents:<cmd>` | the `agents` plugin |
+| Codex | `$agents-start <name>` | `$agents-<cmd>` | `.agents/skills/agents-<cmd>/SKILL.md` |
+| Gemini CLI | `/agents:start <name>` | `/agents:<cmd>` | `.gemini/commands/agents/<cmd>.toml` (+ the `.agents/skills/` wrapper) |
+| OpenCode | `/agents-start <name>` | `/agents-<cmd>` | `.opencode/commands/agents-<cmd>.md` (+ the `.agents/skills/` wrapper) |
+
+The agent files, this document, and the reference files are the same on every harness. Two things are Claude Code only: the gap-notice hook (§ Stale Sessions) and the `${CLAUDE_SESSION_ID}` session ID (`reference/session-end.md` § Step 4 has the per-harness form).
+
 ## Startup Sequence
 
 Standard order after the agent directory is identified:
@@ -278,11 +290,11 @@ Not every session is an interactive pairing with {{PRINCIPAL}}. Automated schedu
 
 **The scheduled-run inbox** (`memory/scheduled/inbox.md`): a rolling, append-only ledger. Ticks append `UNPROCESSED` entries. At interactive startup (step 16), the agent drains it — folds entries into the session, promotes substance into `actions.md` or a memory entry, then flips them to `PROCESSED`. Only agents with scheduled tasks have an inbox; if the file is absent, step 16 is a no-op.
 
-A scheduler is any unattended runner (cron, launchd, a cloud routine) that invokes `claude -p` against a task register. It must: cap each task with an autonomy ceiling, cap tool calls, never commit or push, never use the `/agents:start` router, and log every run. The shared implementation ships with the plugin under `${CLAUDE_PLUGIN_ROOT}/template/agents/scheduler/`: `tick.sh` (entrypoint; sources nvm, runs the gate, starts Claude only when something is due), `gate.py` (parses the register, applies the catch-up rule), `prompt.md`, `policies.md`, a `scheduled-tasks.md` register template, `install-launchd.sh` (macOS) and `setup.sh` (cron). `/agents:init` copies it into `agents/scheduler/` and creates the register; `/agents:schedule` manages tasks and installs the timer. Ticks read the workspace copy, so re-run `/agents:init` (backfill) after a plugin update that changes it.
+A scheduler is any unattended runner (cron, launchd, a cloud routine) that invokes the harness headlessly (`claude -p`, `codex exec`, `gemini --approval-mode yolo`, or `opencode run --auto`, chosen by the `harness:` frontmatter key) against a task register. It must: cap each task with an autonomy ceiling, cap tool calls, never commit or push, never use the `/agents:start` router, and log every run. The shared implementation ships with the plugin under `${CLAUDE_PLUGIN_ROOT}/template/agents/scheduler/`: `tick.sh` (entrypoint; sources nvm, runs the gate, starts the harness only when something is due), `gate.py` (parses the register, applies the catch-up rule), `prompt.md`, `policies.md`, a `scheduled-tasks.md` register template, `install-launchd.sh` (macOS) and `setup.sh` (cron). `/agents:init` copies it into `agents/scheduler/` and creates the register; `/agents:schedule` manages tasks and installs the timer. Ticks read the workspace copy, so re-run `/agents:init` (backfill) after a plugin update that changes it.
 
 ## Stale Sessions
 
-A session left open for hours or days does not know that time passed. The plugin ships a hook (`hooks/gap-notice.sh`) that runs on every prompt: when the gap since the session's last activity exceeds `gap-notice` (frontmatter, default 2 hours), it injects a `[gap notice]` line with the current time, the last-activity time, and the gap. On seeing it the agent must: re-run `date`, state the gap in one line, and if a day or more passed, offer to run the Session End Protocol for the earlier session before taking new work. It never wraps on its own; {{PRINCIPAL}} decides. Nothing runs while the session is idle.
+A session left open for hours or days does not know that time passed. The plugin ships a hook (`hooks/gap-notice.sh`) that runs on every prompt: when the gap since the session's last activity exceeds `gap-notice` (frontmatter, default 2 hours), it injects a `[gap notice]` line with the current time, the last-activity time, and the gap. On seeing it the agent must: re-run `date`, state the gap in one line, and if a day or more passed, offer to run the Session End Protocol for the earlier session before taking new work. It never wraps on its own; {{PRINCIPAL}} decides. Nothing runs while the session is idle. The hook exists only in Claude Code; on other harnesses there is no gap notice, so the `date` at startup and the agent's own judgment cover it.
 
 ## Herdr
 
@@ -326,7 +338,7 @@ Triggered by `/agents:start <name> close`, `end`, `wrap up`, or when {{PRINCIPAL
 
 ## Session Continuity
 
-Use `claude --continue` (most recent) or `claude --resume` (pick from list) to return to previous conversations. Name conversations descriptively early in the session so they're easy to find.
+Use `claude --continue` (most recent) or `claude --resume` (pick from list) to return to previous conversations. Other harnesses: `codex resume`, `gemini --resume`, `opencode run --continue`. Name conversations descriptively early in the session so they're easy to find.
 
 Before wrapping up a conversation, update a lightweight working context note in the relevant area — a brief summary of what was being worked on and what's next. This helps orient the next session without needing full conversation logs.
 
@@ -362,6 +374,7 @@ session_id: ${CLAUDE_SESSION_ID}
 resume: claude --resume ${CLAUDE_SESSION_ID}
 ---
 ```
+(Claude Code form. On another harness use the row for it in `reference/session-end.md` § Step 4.)
 
 Contain: topics discussed, decisions made, open questions. Do NOT duplicate action items — reference `actions.md`.
 
@@ -381,7 +394,7 @@ When you discover operational knowledge worth persisting — a tool config, a wo
 
 Skills are atomic recipes — how to do one thing.
 
-**Source of truth:** `.claude/skills/` at the project root. Claude Code discovers these as slash commands when working in this workspace.
+**Source of truth:** `.claude/skills/` at the project root. Claude Code discovers these as slash commands when working in this workspace. Codex, Gemini CLI, and OpenCode read `.agents/skills/` instead (the Agent Skills standard folder); a skill meant for every harness goes there, and OpenCode also reads `.claude/skills/`.
 
 **Browsing index:** `agents/skills/` contains synced copies for browsing in the vault. Sync direction is `.claude/skills/` → `agents/skills/`.
 

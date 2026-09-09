@@ -60,7 +60,7 @@ For mechanical, templated tasks that require no judgment:
 For tasks requiring judgment, interpretation, or multi-step reasoning:
 
 1. Load a **trimmed tick context** (a tick is not an interactive session — see `agents/CONVENTIONS.md` § Session Types) by reading these files in order:
-   - `agents/CONVENTIONS.md` — read its frontmatter first; if it has `extends: <path>`, read that master file **before** the workspace file (workspace file wins on conflict). If the value is `plugin`, the master is the newest `~/.claude/plugins/cache/*/agents/*/template/agents/CONVENTIONS.md` (glob it; pick the highest version)
+   - `agents/CONVENTIONS.md` — read its frontmatter first; if it has `extends: <path>`, read that master file **before** the workspace file (workspace file wins on conflict). If the value is `plugin`, the master is `$AGENT_FRAMEWORK_ROOT/template/agents/CONVENTIONS.md` when that variable is set (run `echo "$AGENT_FRAMEWORK_ROOT"`; `tick.sh` exports it), else the newest `~/.claude/plugins/cache/*/agents/*/template/agents/CONVENTIONS.md` (glob it; pick the highest version)
    - `agents/<Agent>/soul.md`
    - `agents/<Agent>/name.md`
    - `agents/<Agent>/role.md`

@@ -59,6 +59,27 @@ Then, in the repo where you want agents:
 claude plugin marketplace update normannoble && claude plugin update agents@normannoble
 ```
 
+### Use it from Codex, Gemini CLI, or OpenCode
+
+The agents are markdown; only the command layer is harness-specific. From a clone of this repo:
+
+```bash
+bash harness/install.sh codex    /path/to/workspace   # or gemini, or opencode
+bash harness/install.sh gemini   /path/to/workspace --user          # user-level commands for every repo
+bash harness/install.sh opencode /path/to/workspace --set-default   # ticks and peer panes use this CLI too
+```
+
+It writes thin wrapper skills into `.agents/skills/agents-<cmd>/` (the Agent Skills folder all three read), native slash commands where the harness has them (`.gemini/commands/agents/*.toml`, `.opencode/commands/agents-*.md`), and the `## Agents` block in `AGENTS.md` or `GEMINI.md`. Each wrapper points at this checkout, so `git pull` updates every harness at once. Nothing under `.claude/` is touched; Claude Code keeps using the plugin.
+
+| Harness | Start an agent | Any command |
+|---------|----------------|-------------|
+| Claude Code | `/agents:start <name>` | `/agents:<cmd>` |
+| Codex | `$agents-start <name>` | `$agents-<cmd>` |
+| Gemini CLI | `/agents:start <name>` | `/agents:<cmd>` |
+| OpenCode | `/agents-start <name>` | `/agents-<cmd>` |
+
+`harness: <name>` in the workspace's `agents/CONVENTIONS.md` frontmatter picks which CLI the scheduler (`tick.sh`) and `/agents:ask` peer panes use: `claude -p`, `codex exec`, `gemini --approval-mode yolo`, or `opencode run --auto`. Default `claude`. Not ported: the gap-notice hook (Claude Code hooks only) and `${CLAUDE_SESSION_ID}` in session memories (each harness has its own resume command; see `template/agents/reference/session-end.md`).
+
 ### Install by copying (the installer)
 
 If you would rather have every file inside your repo, with the same `/agents:*` commands:

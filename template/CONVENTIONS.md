@@ -33,7 +33,7 @@ This is an agent workspace. All work flows through named AI agents invoked via t
 
 Workspace infrastructure:
 
-- **`.claude/skills/`** — Agent framework skills (project-level). Claude Code discovers these as slash commands.
+- **`.claude/skills/`** — Agent framework skills (project-level). Claude Code discovers these as slash commands. `.agents/skills/` holds the same for Codex, Gemini CLI, and OpenCode (written by the framework's `harness/install.sh`).
 - **`agents/skills/`** — Synced copies of skills for browsing in the vault.
 - **`agents/tools/`** — Shared tool reference files with per-tool configuration and autonomy defaults.
 

@@ -48,10 +48,19 @@ herdr_pane: ${HERDR_PANE_ID}   # omit the line outside Herdr
 ```
 Include topics discussed, decisions made, and open questions. Do NOT duplicate action items — reference `actions.md`.
 
-Never invent a `session_id`. If `${CLAUDE_SESSION_ID}` is empty, the ID is the filename (without `.jsonl`) of the active conversation file. Look it up from the workspace root:
+Never invent a `session_id`. In Claude Code, if `${CLAUDE_SESSION_ID}` is empty, the ID is the filename (without `.jsonl`) of the active conversation file. Look it up from the workspace root:
 ```bash
 find ~/.claude/projects/-$(pwd | tr '/' '-' | cut -c2-) -name "*.jsonl" -mmin -60 -not -path "*/subagents/*" | head -1 | xargs basename | sed 's/.jsonl//'
 ```
+
+**Other harnesses.** The `session_id` and `resume` lines depend on the CLI you are running in. Use the row that matches; if the harness shows no session ID, write `session_id: none`.
+
+| Harness | `session_id` | `resume` |
+|---------|--------------|----------|
+| Claude Code | `${CLAUDE_SESSION_ID}` or the lookup above | `claude --resume <id>` |
+| Codex | `none` unless shown | `codex resume` (picker) |
+| Gemini CLI | `none` unless shown | `gemini --resume` (pick from `gemini --list-sessions`) |
+| OpenCode | `none` unless shown | `opencode run --continue` |
 
 If the session produced durable rules or decisions, write a separate entry to `memory/standing/` and add it to the Standing section in MEMORY.md.
 

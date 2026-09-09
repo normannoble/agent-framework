@@ -223,7 +223,7 @@ Once name, role, soul, and autonomy are confirmed, create the full agent structu
 
    **Important:** After creating the agent, remind the principal to complete the Post-Creation Admin Checklist in `agents/CONVENTIONS.md` (aliases, labels, permissions, etc.).
 
-8. **Update the workspace root `CLAUDE.md`** (single-domain) or **`<scope>/CLAUDE.md`** (multi-domain) — add the agent to the Agents table (name, role title)
+8. **Update the workspace root instruction file** (single-domain) or the scope's (multi-domain) — `CLAUDE.md`, plus `AGENTS.md` or `GEMINI.md` if the workspace has one with an `## Agents` table — add the agent to the Agents table (name, role title)
 
 9. **Update `agents/CONVENTIONS.md`** — add the name to the `reserved:` frontmatter list (shared/extends mode) or to the **Reserved** line (copied mode)
 

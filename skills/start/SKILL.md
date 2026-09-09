@@ -20,7 +20,7 @@ To detect: glob for both `agents/*/context.md` and `agents/*/*/context.md`. Use 
 
 **Retired agents.** A `context.md` whose frontmatter has `status: retired` marks a retired agent. Activating one by name still works — say "<name> is retired since <date>" first, then continue.
 
-**Conventions inheritance.** Wherever this skill says "read `agents/CONVENTIONS.md`": read the workspace file; if its frontmatter has `extends: <path>`, read that master file **first**, then the workspace file. If the value is the word `plugin`, the master is the copy shipped with this plugin: run `ls "${CLAUDE_PLUGIN_ROOT}/template/agents/CONVENTIONS.md"` to resolve the path, then read it. If that variable is empty, glob `~/.claude/plugins/cache/*/agents/*/template/agents/CONVENTIONS.md` and take the highest version. The workspace file wins on conflict. Placeholders in the master (`{{PRINCIPAL}}`, `{{NAMING_TRADITION}}`, `{{NAMING_EXAMPLES}}`) take their values from the workspace file's frontmatter (`principal`, `naming`, `naming-examples`).
+**Conventions inheritance.** Wherever this skill says "read `agents/CONVENTIONS.md`": read the workspace file; if its frontmatter has `extends: <path>`, read that master file **first**, then the workspace file. If the value is the word `plugin`, the master is the copy shipped with this plugin: run `ls "${CLAUDE_PLUGIN_ROOT}/template/agents/CONVENTIONS.md"` to resolve the path, then read it. If that variable is empty, use `$AGENT_FRAMEWORK_ROOT/template/agents/CONVENTIONS.md` when that variable is set or a wrapper skill named the framework root (another harness: Codex, Gemini CLI, OpenCode); else glob `~/.claude/plugins/cache/*/agents/*/template/agents/CONVENTIONS.md` and take the highest version. The workspace file wins on conflict. Placeholders in the master (`{{PRINCIPAL}}`, `{{NAMING_TRADITION}}`, `{{NAMING_EXAMPLES}}`) take their values from the workspace file's frontmatter (`principal`, `naming`, `naming-examples`).
 
 ## Routing
 
@@ -28,7 +28,7 @@ Parse `$ARGUMENTS` and route:
 
 ### `list`, `status`, `next`, `doctor`, `schedule`, `ask`, or `help` as the first word
 
-These moved to their own commands. Say so in one line — e.g. "`/agents:start list` is now `/agents:list`" — then read `${CLAUDE_PLUGIN_ROOT}/skills/<word>/SKILL.md` (if the variable is empty, glob `~/.claude/plugins/cache/*/agents/*/skills/<word>/SKILL.md` and take the highest version; in copied mode it is `.claude/skills/agents/skills/<word>/SKILL.md`) and follow it with the remaining arguments.
+These moved to their own commands. Say so in one line — e.g. "`/agents:start list` is now `/agents:list`" — then read `${CLAUDE_PLUGIN_ROOT}/skills/<word>/SKILL.md` (if the variable is empty: `$AGENT_FRAMEWORK_ROOT/skills/<word>/SKILL.md` or the framework root a wrapper skill named; else glob `~/.claude/plugins/cache/*/agents/*/skills/<word>/SKILL.md` and take the highest version; in copied mode it is `.claude/skills/agents/skills/<word>/SKILL.md`) and follow it with the remaining arguments.
 
 ### `/agents:start <name>` or `/agents:start <name> <topic>`
 1. Find the agent directory: Glob for both `agents/<name>/context.md` and `agents/*/<name>/context.md` (case-insensitive match on directory name)

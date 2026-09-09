@@ -25,7 +25,7 @@ Run `date` first. For every agent in scope, run `wc -c` on the files below in on
 
 ### A. Startup cost (what the agent reads before it says hello)
 
-Sum the bytes of: workspace `agents/CONVENTIONS.md` + the master it extends (count once per report; the master is `${CLAUDE_PLUGIN_ROOT}/template/agents/CONVENTIONS.md`, or glob `~/.claude/plugins/cache/*/agents/*/template/agents/CONVENTIONS.md` highest version, or `.claude/skills/agents/../..` in copied mode — if unresolvable, use 27,000), `soul.md`, `name.md`, `role.md`, `autonomy.md`, `agents/tools/INDEX.md`, `tools.md`, `actions.md`, `MEMORY.md`, every file in `memory/standing/`, the 2 newest files in `memory/sessions/`, `context.md`, and every path listed under its `## Startup Context`. Estimate tokens as bytes ÷ 4.
+Sum the bytes of: workspace `agents/CONVENTIONS.md` + the master it extends (count once per report; the master is `${CLAUDE_PLUGIN_ROOT}/template/agents/CONVENTIONS.md`, or `$AGENT_FRAMEWORK_ROOT/template/agents/CONVENTIONS.md` / the root a wrapper skill named on another harness, or glob `~/.claude/plugins/cache/*/agents/*/template/agents/CONVENTIONS.md` highest version, or `.claude/skills/agents/../..` in copied mode — if unresolvable, use 27,000), `soul.md`, `name.md`, `role.md`, `autonomy.md`, `agents/tools/INDEX.md`, `tools.md`, `actions.md`, `MEMORY.md`, every file in `memory/standing/`, the 2 newest files in `memory/sessions/`, `context.md`, and every path listed under its `## Startup Context`. Estimate tokens as bytes ÷ 4.
 
 | Tokens | Grade |
 |--------|-------|
@@ -69,7 +69,8 @@ Always name the **single biggest file** and its share. That is the fix.
 - ❌ `agents/CONVENTIONS.md` missing or without `extends:` in frontmatter.
 - ⚠️ `reserved:` list in that frontmatter does not match the agent directories (names missing from the list, or listed names with no directory).
 - ⚠️ `agents/tools/INDEX.md` missing.
-- ⚠️ `CLAUDE.md` `## Agents` table lists an agent that is retired or missing, or omits an active one.
+- ⚠️ the instruction file's `## Agents` table (`CLAUDE.md`; also `AGENTS.md` or `GEMINI.md` if present) lists an agent that is retired or missing, or omits an active one.
+- ⚠️ `harness:` in `agents/CONVENTIONS.md` frontmatter is set to a CLI that is not on PATH (`claude`, `codex`, `gemini`, `opencode`): ticks and peer panes would fail.
 - ℹ️ `git status --short agents/` shows uncommitted changes (list the count only).
 - ❌ (Herdr only: run `echo "$HERDR_ENV"`; if `1`) `herdr agent list` shows the same agent name live in two or more panes whose `cwd` is under this root — two sessions share one tracker. Name the panes. Ignore other roots.
 
