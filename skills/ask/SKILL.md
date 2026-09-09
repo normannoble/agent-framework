@@ -1,6 +1,5 @@
 ---
 description: Ask another agent in this workspace for a review, a fact, or a draft. Opens a fresh Herdr pane, runs the target as a peer session, waits for its written reply, closes the pane. Same workspace only. Use /agents:ask <name> "<request>". Requires Herdr (HERDR_ENV=1).
-disable-model-invocation: true
 allowed-tools: Read, Write, Glob, Grep, Bash(date), Bash(echo:*), Bash(pwd), Bash(mkdir:*), Bash(herdr agent list:*), Bash(herdr agent start:*), Bash(herdr agent prompt:*), Bash(herdr agent read:*), Bash(herdr agent get:*), Bash(herdr pane split:*), Bash(herdr pane rename:*), Bash(herdr pane layout:*), Bash(herdr pane close:*)
 argument-hint: <name> "<request>"
 ---
