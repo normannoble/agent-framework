@@ -20,7 +20,7 @@ You ask one agent in this workspace to do one bounded thing for the agent you cu
 1. `date` → stamp `YYYY-MM-DD-HHMM`. `mkdir -p agents/<Target>/peer`. Write `agents/<Target>/peer/<stamp>-from-<caller>.md` with the frontmatter and `## Request` from peer.md (`status: open`, `caller_pane: $HERDR_PANE_ID`). The request text must be self-contained: name every file, ID, and constraint the target needs. Do not rely on anything only this session knows.
 2. `herdr pane layout --pane "$HERDR_PANE_ID"` → wide → `right`, tall → `down`. `herdr pane split --current --direction <dir> --cwd "$PWD" --no-focus` → read `.result.pane.pane_id`.
 3. `herdr pane rename <id> "<Target> - Peer"`.
-4. `herdr agent start <target>-peer --kind <harness> --pane <id>`. If it returns `agent_not_ready`, wait once with `herdr agent get`; if still blocked, read the pane, tell the principal, stop (pane stays open).
+4. `herdr agent start <target>-peer --kind <harness> --pane <id>`; for `codex` append ` -- --approve-for-me` (Codex auto-reviews approvals inside its workspace-write sandbox). If it returns `agent_not_ready`, wait once with `herdr agent get`; if still blocked, read the pane, tell the principal, stop (pane stays open).
 5. `herdr agent prompt <target>-peer "<start> <target> peer agents/<Target>/peer/<file>" --wait --timeout 600000` (`<start>` from precondition 4, e.g. `/agents:start`).
 6. On `blocked`: `herdr agent read <target>-peer --source recent-unwrapped --lines 60`, report the prompt to the principal, stop. Never answer it.
 7. Read the file. If `## Reply` exists: `herdr pane close <id>`, then present the reply in ≤ 10 lines and any `Needs <principal>:` lines verbatim. If not: say the peer produced no reply, leave the pane open, stop.
