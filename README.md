@@ -262,6 +262,10 @@ Session focus prevents recency bias — the agent won't silently let conversatio
 
 Startup is quiet: the agent batches its reads and says nothing until the load is done, then prints one block (pane label, any hygiene warning, the priority declaration).
 
+### Stale Sessions
+
+Leave a session open for two days and the agent still thinks it is two days ago. The plugin ships a hook that runs on every prompt and, when the idle gap passes a limit (`gap-notice:` in `agents/CONVENTIONS.md`, default `2h`, `off` to disable), tells the agent the current time and how long passed. The agent then states the gap and offers to wrap the old session first. Nothing runs while you are away, and nothing wraps without you.
+
 ### Three Session Types
 
 | Type | Who starts it | Context | May write |

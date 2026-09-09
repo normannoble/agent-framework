@@ -98,4 +98,6 @@ Another agent asked for something. You are not in a conversation with the princi
 
 After loading, **you are that agent for the rest of this session.** Adopt the soul, follow the role's working mode, respect the scope boundaries, and follow the conventions from `agents/CONVENTIONS.md`. You are not the router anymore — you are the agent.
 
+**Gap notice.** If a message arrives with a `[gap notice]` line (injected by the plugin hook when the session sat idle past the workspace's `gap-notice` limit), run `date` first, say in one line how much time passed ("Two days passed since we last spoke; it is Wed 09 Sep 09:10"), and if the gap is a day or more offer to wrap the earlier session (Session End Protocol) before new work. Do not wrap unasked.
+
 **During the session:** Monitor for topic drift. When conversation moves away from declared session focus items, perform a compass check — acknowledge the new topic, note it for tracking, and steer back to the session focus. If drift becomes sustained, flag it directly and suggest either refocusing or wrapping the session to start a fresh one on the new topic.

@@ -13,6 +13,7 @@ This master is shared. A workspace's `agents/CONVENTIONS.md` carries frontmatter
 | `ticket-column` | `Ticket` | Name of the issue-tracker column in `actions.md` (e.g. `Linear`, `Jira`). The ticket sync rules in § actions.md apply to that tracker. |
 | `inbound` | `none` | Channel checked in step 2 of the Session Priority Declaration (`email`, `slack`, `none`). The triage command lives in each agent's `tools.md`. |
 | `scheduler` | `none` | `launchd` or `cron` if the workspace runs the shared scheduler (see § Session Types). |
+| `gap-notice` | `2h` | Idle gap after which the plugin's hook tells the agent how much time passed (`30m`, `2h`, `1d`, or `off`). See § Stale Sessions. |
 
 ## Reference files (read on demand, never at startup)
 
@@ -278,6 +279,10 @@ Not every session is an interactive pairing with {{PRINCIPAL}}. Automated schedu
 **The scheduled-run inbox** (`memory/scheduled/inbox.md`): a rolling, append-only ledger. Ticks append `UNPROCESSED` entries. At interactive startup (step 16), the agent drains it — folds entries into the session, promotes substance into `actions.md` or a memory entry, then flips them to `PROCESSED`. Only agents with scheduled tasks have an inbox; if the file is absent, step 16 is a no-op.
 
 A scheduler is any unattended runner (cron, launchd, a cloud routine) that invokes `claude -p` against a task register. It must: cap each task with an autonomy ceiling, cap tool calls, never commit or push, never use the `/agents:start` router, and log every run. The shared implementation ships with the plugin under `${CLAUDE_PLUGIN_ROOT}/template/agents/scheduler/`: `tick.sh` (entrypoint; sources nvm, runs the gate, starts Claude only when something is due), `gate.py` (parses the register, applies the catch-up rule), `prompt.md`, `policies.md`, a `scheduled-tasks.md` register template, `install-launchd.sh` (macOS) and `setup.sh` (cron). `/agents:init` copies it into `agents/scheduler/` and creates the register; `/agents:schedule` manages tasks and installs the timer. Ticks read the workspace copy, so re-run `/agents:init` (backfill) after a plugin update that changes it.
+
+## Stale Sessions
+
+A session left open for hours or days does not know that time passed. The plugin ships a hook (`hooks/gap-notice.sh`) that runs on every prompt: when the gap since the session's last activity exceeds `gap-notice` (frontmatter, default 2 hours), it injects a `[gap notice]` line with the current time, the last-activity time, and the gap. On seeing it the agent must: re-run `date`, state the gap in one line, and if a day or more passed, offer to run the Session End Protocol for the earlier session before taking new work. It never wraps on its own; {{PRINCIPAL}} decides. Nothing runs while the session is idle.
 
 ## Herdr
 
