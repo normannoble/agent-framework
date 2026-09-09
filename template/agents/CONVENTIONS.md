@@ -14,7 +14,7 @@ This master is shared. A workspace's `agents/CONVENTIONS.md` carries frontmatter
 | `inbound` | `none` | Channel checked in step 2 of the Session Priority Declaration (`email`, `slack`, `none`). The triage command lives in each agent's `tools.md`. |
 | `scheduler` | `none` | `launchd` or `cron` if the workspace runs the shared scheduler (see § Session Types). |
 | `gap-notice` | `2h` | Idle gap after which the plugin's hook tells the agent how much time passed (`30m`, `2h`, `1d`, or `off`). See § Stale Sessions. |
-| `harness` | `claude` | The coding-agent CLI that runs unattended ticks and peer panes: `claude`, `codex`, `gemini`, or `opencode`. Interactive sessions work from any harness that has the framework commands installed (see § Invocation). |
+| `harness` | `claude` | The coding-agent CLI that runs unattended ticks and peer panes: `claude`, `codex`, `gemini`, or `opencode`. An agent's `context.md` may set its own `harness:` for peer panes (see § context.md). Interactive sessions work from any harness that has the framework commands installed (see § Invocation). |
 
 ## Reference files (read on demand, never at startup)
 
@@ -157,7 +157,7 @@ When {{PRINCIPAL}} asks you to review or clean up your tracker, read `reference/
 
 ### context.md
 
-Frontmatter carries `scope` and `title`. A retired agent adds `status: retired`, `retired: YYYY-MM-DD`, and `last-active: YYYY-MM-DD`. Retired agents keep their files (history has value) but are hidden from `/agents:list`, `/agents:status`, and `/agents:next` unless `all` is passed. Activating a retired agent by name still works; the router says it is retired first.
+Frontmatter carries `scope` and `title`. An optional `harness:` (`claude`, `codex`, `gemini`, or `opencode`) sets the CLI that runs this agent as a peer in `/agents:ask`; it overrides the workspace `harness:` key for that agent only (ticks stay on the workspace value). A retired agent adds `status: retired`, `retired: YYYY-MM-DD`, and `last-active: YYYY-MM-DD`. Retired agents keep their files (history has value) but are hidden from `/agents:list`, `/agents:status`, and `/agents:next` unless `all` is passed. Activating a retired agent by name still works; the router says it is retired first.
 
 Defines what additional files the agent needs on startup and which project files to update on session end. Frontmatter includes `scope` and `title` (used by `/agents:list`). Body has two sections:
 - **Startup Context** — paths to read after the standard agent files (soul, role, autonomy, actions, memory)
